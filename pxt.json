@@ -5,7 +5,7 @@
         "core": "*",
         "radio": "*",
         "microphone": "*",
-        "pxt-soccer": "github:CBurg-College/pxt-soccer#be81e41443dff162ee6604f56c1224a4957bc064"
+        "pxt-soccer": "github:cburg-college/pxt-soccer#8d8e6ee826c38084c3cb5ff439388a57035dda20"
     },
     "files": [
         "main.blocks",
@@ -16,7 +16,7 @@
         "test.ts"
     ],
     "targetVersions": {
-        "target": "7.0.61",
+        "target": "8.0.8",
         "targetId": "microbit"
     },
     "supportedTargets": [
