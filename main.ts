@@ -498,7 +498,7 @@ function handle(cmd:number) {
                 OBSTRUCTIONS++
                 display()
                 if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CSoccer.COMMAND.WinnerRed)
+                    radio.sendNumber(CSoccer.COMMAND.WinnerGreen)
             }
             break;
     }
