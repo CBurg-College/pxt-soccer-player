@@ -625,8 +625,8 @@ namespace CSoccerPlayer
     export function findBall() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
-            Nezha.motorSpeed(Nezha.Motor.M2, -10)
-            Nezha.motorSpeed(Nezha.Motor.M3, 10)
+            Nezha.motorSpeed(Nezha.Motor.M2, -20)
+            Nezha.motorSpeed(Nezha.Motor.M3, 20)
             do {
                 CameraAI.fetchCamera()
             } while (!CameraAI.itemCount())
