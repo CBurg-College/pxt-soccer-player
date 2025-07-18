@@ -513,7 +513,7 @@ namespace CSoccerPlayer
 
     //% block="turn to the other half"
     //% block.loc.nl="draai richting andere helft"
-    export function turn() {
+    export function turnToOpponent() {
         Nezha.motorSpeed(Nezha.Motor.M2, 10)
         Nezha.motorSpeed(Nezha.Motor.M3, -10)
         while (!isHeading()) { basic.pause(1) }
@@ -530,6 +530,14 @@ namespace CSoccerPlayer
     //% block="run to the ball"
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
+        CameraAI.recognize(CameraAI.Recognize.Ball)
+        Nezha.motorSpeed(Nezha.Motor.M2, 10)
+        Nezha.motorSpeed(Nezha.Motor.M3, 10)
+        do {
+            CameraAI.fetchCamera()
+        } while (CameraAI.itemPosY() > 200)
+        Nezha.motorSpeed(Nezha.Motor.M2, 0)
+        Nezha.motorSpeed(Nezha.Motor.M3, 0)
     }
 
     //% block="turn to the ball"
@@ -553,7 +561,7 @@ namespace CSoccerPlayer
     }
 
     basic.forever(function () {
-        if (ColorSensor.readColor() == ColorSensor.Color.Black)
+        if (ColorSensor.readColor() != ColorSensor.Color.White)
             if (EventOnLine) EventOnLine()
     })
 }
