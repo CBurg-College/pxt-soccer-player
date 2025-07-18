@@ -437,6 +437,7 @@ function isPlayer() : Player {
 }
 
 let PLAYER = isPlayer()
+let PLAYING = false
 let HEADING = input.compassHeading()
 let OBSTRUCTIONS = 0
 
@@ -469,6 +470,12 @@ function handle(cmd:number) {
     }
 */
     switch (cmd) {
+        case CSoccer.COMMAND.Start:
+            PLAYING = true
+            break;
+        case CSoccer.COMMAND.Stop:
+            PLAYING = false
+            break;
         case CSoccer.COMMAND.GoalGreen:
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
@@ -541,7 +548,7 @@ namespace CSoccerPlayer
     //% block="shoot the ball"
     //% block.loc.nl="schiet de bal"
     export function shoot() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             Nezha.servoAngle(Nezha.Servo.S1, 65)
         }
     }
@@ -550,7 +557,7 @@ namespace CSoccerPlayer
     //% block.loc.nl="rijd %cm cm %dir"
     //% cm.max=20 cm.min=0
     export function run(cm: number, dir: Direction) {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             let speed = (dir ? -15 : 15)
             Nezha.motorSpeed(Nezha.Motor.M2, speed)
             Nezha.motorSpeed(Nezha.Motor.M3, speed)
@@ -563,7 +570,7 @@ namespace CSoccerPlayer
     //% block="turn to the goal"
     //% block.loc.nl="draai richting het doel"
     export function findGoal() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Color)
             Nezha.motorSpeed(Nezha.Motor.M2, 10)
             Nezha.motorSpeed(Nezha.Motor.M3, -10)
@@ -581,7 +588,7 @@ namespace CSoccerPlayer
     //% block="turn to the other half"
     //% block.loc.nl="draai richting andere helft"
     export function turnToOpponent() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             Nezha.motorSpeed(Nezha.Motor.M2, 10)
             Nezha.motorSpeed(Nezha.Motor.M3, -10)
             while (!isHeading()) { basic.pause(1) }
@@ -593,7 +600,7 @@ namespace CSoccerPlayer
     //% block="take the ball in possession"
     //% block.loc.nl="neem balbezit"
     export function possessBall() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             Nezha.servoAngle(Nezha.Servo.S1, 120)
         }
     }
@@ -601,7 +608,7 @@ namespace CSoccerPlayer
     //% block="run to the ball"
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
             Nezha.motorSpeed(Nezha.Motor.M2, 10)
             Nezha.motorSpeed(Nezha.Motor.M3, 10)
@@ -616,7 +623,7 @@ namespace CSoccerPlayer
     //% block="turn to the ball"
     //% block.loc.nl="draai richting de bal"
     export function findBall() {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
             Nezha.motorSpeed(Nezha.Motor.M2, -10)
             Nezha.motorSpeed(Nezha.Motor.M3, 10)
@@ -629,7 +636,7 @@ namespace CSoccerPlayer
     }
 
     basic.forever(function () {
-        if (CSoccer.isPlaying()) {
+        if (PLAYING) {
             if (ColorSensor.readColor() != ColorSensor.Color.White)
                 if (EventOutsideField) EventOutsideField()
         }
