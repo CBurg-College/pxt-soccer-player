@@ -587,8 +587,8 @@ namespace CSoccerPlayer
     export function findGoal() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Color)
-            Nezha.motorSpeed(Nezha.Motor.M2, 10)
-            Nezha.motorSpeed(Nezha.Motor.M3, -10)
+            Nezha.motorSpeed(Nezha.Motor.M2, 15)
+            Nezha.motorSpeed(Nezha.Motor.M3, -15)
             do {
                 CameraAI.fetchCamera()
                 if (!CameraAI.itemCount())
@@ -604,8 +604,8 @@ namespace CSoccerPlayer
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
         if (PLAYING) {
-            Nezha.motorSpeed(Nezha.Motor.M2, 10)
-            Nezha.motorSpeed(Nezha.Motor.M3, -10)
+            Nezha.motorSpeed(Nezha.Motor.M2, 15)
+            Nezha.motorSpeed(Nezha.Motor.M3, -15)
             while (!isHeading()) { basic.pause(1) }
             Nezha.motorSpeed(Nezha.Motor.M2, 0)
             Nezha.motorSpeed(Nezha.Motor.M3, 0)
@@ -625,8 +625,8 @@ namespace CSoccerPlayer
     export function approachBall() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
-            Nezha.motorSpeed(Nezha.Motor.M2, 10)
-            Nezha.motorSpeed(Nezha.Motor.M3, 10)
+            Nezha.motorSpeed(Nezha.Motor.M2, 15)
+            Nezha.motorSpeed(Nezha.Motor.M3, 15)
             do {
                 CameraAI.fetchCamera()
             } while (CameraAI.itemPosY() > 200)
@@ -640,8 +640,8 @@ namespace CSoccerPlayer
     export function findBall() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
-            Nezha.motorSpeed(Nezha.Motor.M2, -20)
-            Nezha.motorSpeed(Nezha.Motor.M3, 20)
+            Nezha.motorSpeed(Nezha.Motor.M2, -15)
+            Nezha.motorSpeed(Nezha.Motor.M3, 15)
             do {
                 CameraAI.fetchCamera()
             } while (!CameraAI.itemCount())
