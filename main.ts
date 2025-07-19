@@ -446,7 +446,6 @@ let EventOutsideField: eventHandler
 let EventGoalAsset: eventHandler
 let EventGoalAgainst: eventHandler
 let EventObstruction: eventHandler
-let EventDisqualified: eventHandler
 let EventWinner: eventHandler
 let EventLoser: eventHandler
 
@@ -472,9 +471,6 @@ function handle(cmd:number) {
     switch (cmd) {
         case CSoccer.COMMAND.Start:
             PLAYING = true
-            break;
-        case CSoccer.COMMAND.Stop:
-            PLAYING = false
             break;
         case CSoccer.COMMAND.GoalGreen:
             if (PLAYER == Player.Green) {
@@ -508,7 +504,26 @@ function handle(cmd:number) {
                     radio.sendNumber(CSoccer.COMMAND.WinnerGreen)
             }
             break;
+        case CSoccer.COMMAND.WinnerGreen:
+        case CSoccer.COMMAND.DisqualRed:
+            if (PLAYER == Player.Green) {
+                if (EventWinner) EventWinner()
+            }
+            else {
+                if (EventLoser) EventLoser()
+            }
+            break;
+        case CSoccer.COMMAND.WinnerRed:
+        case CSoccer.COMMAND.DisqualGreen:
+            if (PLAYER == Player.Red) {
+                if (EventWinner) EventWinner()
+            }
+            else {
+                if (EventLoser) EventLoser()
+            }
+            break;
     }
+    PLAYING = (cmd == CSoccer.COMMAND.Start)
 }
 
 function display() {
@@ -585,8 +600,8 @@ namespace CSoccerPlayer
         }
     }
 
-    //% block="turn to the other half"
-    //% block.loc.nl="draai richting andere helft"
+    //% block="turn to the start directin"
+    //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
         if (PLAYING) {
             Nezha.motorSpeed(Nezha.Motor.M2, 10)
@@ -635,20 +650,18 @@ namespace CSoccerPlayer
         }
     }
 
+    //% block="wait for the start signal"
+    //% block.loc.nl="wacht op het startsignaal"
+    export function waitForStart() {
+        while (!PLAYING) {basic.pause(1)}
+    }
+
     basic.forever(function () {
         if (PLAYING) {
             if (ColorSensor.readColor() != ColorSensor.Color.White)
                 if (EventOutsideField) EventOutsideField()
         }
     })
-
-    //% group="Extra"
-    //% color="#FFCC00"
-    //% block="when disqualified"
-    //% block.loc.nl="wanneer gediskwalificeerd"
-    export function onEventDisqualified(programmableCode: () => void): void {
-        EventDisqualified = programmableCode;
-    }
 
     //% group="Extra"
     //% color="#FFCC00"
