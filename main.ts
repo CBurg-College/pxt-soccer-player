@@ -650,10 +650,10 @@ namespace CSoccerPlayer
         }
     }
 
-    //% block="wait for the start signal"
-    //% block.loc.nl="wacht op het startsignaal"
-    export function waitForStart() {
-        while (!PLAYING) {basic.pause(1)}
+    //% block="the start signal was given"
+    //% block.loc.nl="het startsignaal werd gegeven"
+    export function waitForStart() : boolean {
+        return PLAYING
     }
 
     basic.forever(function () {
