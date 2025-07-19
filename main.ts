@@ -424,15 +424,15 @@ enum Player {
     //% block="green"
     //% block.loc.nl="groen"
     Green,
-    //% block="red"
+    //% block="blue"
     //% block.loc.nl="rood"
-    Red
+    Blue
 }
 
 function isPlayer() : Player {
     let player = Player.Green
-    if (ColorSensor.readColor() == ColorSensor.Color.Red)
-        player = Player.Red
+    if (ColorSensor.readColor() == ColorSensor.Color.Blue)
+        player = Player.Blue
     return player
 }
 
@@ -458,13 +458,13 @@ function handle(cmd:number) {
         Start,
         Stop,
         GoalGreen,
-        GoalRed,
+        GoalBlue,
         ObstructGreen,
-        ObstructRed,
+        ObstructBlue,
         WinnerGreen,
-        WinnerRed,
+        WinnerBlue,
         DisqualGreen,
-        DisqualRed,
+        DisqualBlue,
         Reset
     }
 */
@@ -480,8 +480,8 @@ function handle(cmd:number) {
                 if (EventGoalAgainst) EventGoalAgainst()
             }
             break;
-        case CSoccer.COMMAND.GoalRed:
-            if (PLAYER == Player.Red) {
+        case CSoccer.COMMAND.GoalBlue:
+            if (PLAYER == Player.Blue) {
                 if (EventGoalAsset) EventGoalAsset()
             }
             else {
@@ -493,11 +493,11 @@ function handle(cmd:number) {
                 OBSTRUCTIONS++
                 display()
                 if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CSoccer.COMMAND.WinnerRed)
+                    radio.sendNumber(CSoccer.COMMAND.WinnerBlue)
             }
             break;
-        case CSoccer.COMMAND.ObstructRed:
-            if (PLAYER == Player.Red) {
+        case CSoccer.COMMAND.ObstructBlue:
+            if (PLAYER == Player.Blue) {
                 OBSTRUCTIONS++
                 display()
                 if (OBSTRUCTIONS > 2)
@@ -505,7 +505,7 @@ function handle(cmd:number) {
             }
             break;
         case CSoccer.COMMAND.WinnerGreen:
-        case CSoccer.COMMAND.DisqualRed:
+        case CSoccer.COMMAND.DisqualBlue:
             if (PLAYER == Player.Green) {
                 if (EventWinner) EventWinner()
             }
@@ -513,9 +513,9 @@ function handle(cmd:number) {
                 if (EventLoser) EventLoser()
             }
             break;
-        case CSoccer.COMMAND.WinnerRed:
+        case CSoccer.COMMAND.WinnerBlue:
         case CSoccer.COMMAND.DisqualGreen:
-            if (PLAYER == Player.Red) {
+            if (PLAYER == Player.Blue) {
                 if (EventWinner) EventWinner()
             }
             else {
@@ -594,13 +594,13 @@ namespace CSoccerPlayer
                 if (!CameraAI.itemCount())
                     continue
                 basic.pause(1)
-            } while (CameraAI.itemIsColor(CameraAI.Colors.Red))
+            } while (CameraAI.itemIsColor(CameraAI.Colors.Blue))
             Nezha.motorSpeed(Nezha.Motor.M2, 0)
             Nezha.motorSpeed(Nezha.Motor.M3, 0)
         }
     }
 
-    //% block="turn to the start directin"
+    //% block="turn to the start direction"
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
         if (PLAYING) {
