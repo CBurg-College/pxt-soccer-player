@@ -120,7 +120,7 @@ namespace ColorSensor {
         return val;
     }
 
-    function init() {
+    export function init() {
 
         // init module
         i2cwrite_color(APDS9960_ADDR, APDS9960_ATIME, 252)
@@ -280,6 +280,307 @@ namespace ColorSensor {
     }
 
 }
+namespace LedRing {
+
+    export enum Pin {
+        //% block="J1" 
+        J1 = DigitalPin.P8,
+        //% block="J2"
+        J2 = DigitalPin.P12,
+        //% block="J3"
+        J3 = DigitalPin.P14,
+        //% block="J4"
+        J4 = DigitalPin.P16
+    }
+
+    export enum Color {
+        //% block="red"
+        //% block.loc.nl="rood"
+        Red = 0xFF0000,
+        //% block="orange"
+        //% block.loc.nl="oranje"
+        Orange = 0xFFA500,
+        //% block="yellow"
+        //% block.loc.nl="geel"
+        Yellow = 0xFFFF00,
+        //% block="green"
+        //% block.loc.nl="groen"
+        Green = 0x00FF00,
+        //% block="blue"
+        //% block.loc.nl="blauw"
+        Blue = 0x0000FF,
+        //% block="indigo"
+        //% block.loc.nl="indigo"
+        Indigo = 0x4b0082,
+        //% block="violet"
+        //% block.loc.nl="violet"
+        Violet = 0x8a2be2,
+        //% block="purple"
+        //% block.loc.nl="paars"
+        Purple = 0xFF00FF,
+        //% block="white"
+        //% block.loc.nl="wit"
+        White = 0xFFFFFF,
+        //% block="black"
+        //% block.loc.nl="zwart"
+        Black = 0x000000
+    }
+
+    export enum HueInterpolationDirection {
+        Clockwise,
+        CounterClockwise,
+        Shortest
+    }
+
+    function packRGB(a: number, b: number, c: number): number {
+        return ((a & 0xFF) << 16) | ((b & 0xFF) << 8) | (c & 0xFF);
+    }
+
+    function unpackR(rgb: number): number {
+        let r = (rgb >> 16) & 0xFF;
+        return r;
+    }
+
+    function unpackG(rgb: number): number {
+        let g = (rgb >> 8) & 0xFF;
+        return g;
+    }
+
+    function unpackB(rgb: number): number {
+        let b = (rgb) & 0xFF;
+        return b;
+    }
+
+    //% block="hue %h|saturation %s|luminosity %l"
+    //% subcategory=Neopixel
+    //% color=#EA5532
+    export function hsl(h: number, s: number, l: number): number {
+        h = Math.round(h);
+        s = Math.round(s);
+        l = Math.round(l);
+
+        h = h % 360;
+        s = Math.clamp(0, 99, s);
+        l = Math.clamp(0, 99, l);
+        let c = Math.idiv((((100 - Math.abs(2 * l - 100)) * s) << 8), 10000); //chroma, [0,255]
+        let h1 = Math.idiv(h, 60);//[0,6]
+        let h2 = Math.idiv((h - h1 * 60) * 256, 60);//[0,255]
+        let temp = Math.abs((((h1 % 2) << 8) + h2) - 256);
+        let x = (c * (256 - (temp))) >> 8;//[0,255], second largest component of this color
+        let r$:
+            number;
+        let g$:
+            number;
+        let b$:
+            number;
+        if (h1 == 0) {
+            r$ = c;
+            g$ = x;
+            b$ = 0;
+        }
+        else if (h1 == 1) {
+            r$ = x;
+            g$ = c;
+            b$ = 0;
+        }
+        else if (h1 == 2) {
+            r$ = 0;
+            g$ = c;
+            b$ = x;
+        }
+        else if (h1 == 3) {
+            r$ = 0;
+            g$ = x;
+            b$ = c;
+        }
+        else if (h1 == 4) {
+            r$ = x;
+            g$ = 0;
+            b$ = c;
+        }
+        else if (h1 == 5) {
+            r$ = c;
+            g$ = 0;
+            b$ = x;
+        }
+        let m = Math.idiv((Math.idiv((l * 2 << 8), 100) - c), 2);
+        let r = r$ + m;
+        let g = g$ + m;
+        let b = b$ + m;
+        return packRGB(r, g, b);
+    }
+
+    //% shim=light::sendWS2812Buffer
+    declare function displaySendBuffer(buf: Buffer, pin: DigitalPin): void;
+
+    export class Strip {
+        buf: Buffer;
+        pin: DigitalPin;
+
+        brightness: number;
+        start: number; // start offset in LED strip
+        _length: number; // number of LEDs
+        _mode: number;
+        _matrixWidth: number; // number of leds in a matrix - if any
+
+        //% block="%strip|show color %rgb=neopixel_colors"
+        //% color=#EA5532
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        showColor(rgb: number) {
+            rgb = rgb >> 0;
+            this.setAllRGB(rgb);
+            this.show();
+        }
+
+        //% block="%strip|led color at %pixeloffset as %rgb=neopixel_colors"
+        //% block.loc.nl="%strip|kleur de led op %pixeloffset met %rgb=neopixel_colors"
+        //% color=#EA5532
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        setPixelColor(pixeloffset: number, rgb: number): void {
+            this.setPixelRGB(pixeloffset >> 0, rgb >> 0);
+            // call show when all pixels have been set
+        }
+
+        //% block="%strip|Do now"
+        //% block.loc.nl="%strip|Nu doen"
+        //% block.loc.nl="%strip|"
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        show() {
+            // call when all pixel have been set by setPixelColor
+            displaySendBuffer(this.buf, this.pin);
+        }
+
+        //% block="%strip|all leds off"
+        //% block="%strip|alle leds uit"
+        //% color=#EA5532
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        clear(): void {
+            const stride = 3; // rgb mode
+            this.buf.fill(0, this.start * stride, this._length * stride);
+            // call show when all pixels have been set
+        }
+
+        //% block="%strip|rotate by %offset positions" 
+        //% block.loc.nl="%strip|draai met %offset plaatsen"
+        //% color=#EA5532
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        rotate(offset: number = 1): void {
+            offset = offset >> 0;
+            const stride = 3; // rgb mode
+            this.buf.rotate(-offset * stride, this.start * stride, this._length * stride)
+            // call show when all pixels have been set
+        }
+
+        //% block="%strip|show a rainbow" 
+        //% block.loc.nl="%strip|toon een regenboog"
+        //% color=#EA5532
+        //% parts="neopixel"
+        //% subcategory=Neopixel
+        rainbow() {
+            this.setPixelColor(0, Color.Red)
+            this.setPixelColor(1, Color.Orange)
+            this.setPixelColor(2, Color.Yellow)
+            this.setPixelColor(3, Color.Green)
+            this.setPixelColor(4, Color.Blue)
+            this.setPixelColor(5, Color.Indigo)
+            this.setPixelColor(6, Color.Violet)
+            this.setPixelColor(7, Color.Purple)
+            this.show()
+        }
+
+        setPin(pin: DigitalPin): void {
+            this.pin = pin;
+            pins.digitalWritePin(this.pin, 0);
+            // don't yield to avoid races on initialization
+        }
+
+        private setBufferRGB(offset: number, red: number, green: number, blue: number): void {
+            // rgb mode:
+            this.buf[offset + 0] = green;
+            this.buf[offset + 1] = red;
+            this.buf[offset + 2] = blue;
+        }
+
+        private setAllRGB(rgb: number) {
+            let red = unpackR(rgb);
+            let green = unpackG(rgb);
+            let blue = unpackB(rgb);
+
+            const br = this.brightness;
+            if (br < 255) {
+                red = (red * br) >> 8;
+                green = (green * br) >> 8;
+                blue = (blue * br) >> 8;
+            }
+            const end = this.start + this._length;
+            const stride = 3; // rgb mode
+            for (let i = this.start; i < end; ++i) {
+                this.setBufferRGB(i * stride, red, green, blue)
+            }
+        }
+
+        private setPixelRGB(pixeloffset: number, rgb: number): void {
+            if (pixeloffset < 0
+                || pixeloffset >= this._length)
+                return;
+
+            let stride = 3; // rgb mode
+            pixeloffset = (pixeloffset + this.start) * stride;
+
+            let red = unpackR(rgb);
+            let green = unpackG(rgb);
+            let blue = unpackB(rgb);
+
+            let br = this.brightness;
+            if (br < 255) {
+                red = (red * br) >> 8;
+                green = (green * br) >> 8;
+                blue = (blue * br) >> 8;
+            }
+            this.setBufferRGB(pixeloffset, red, green, blue)
+        }
+    }
+
+    export function create(rjpin: Pin, numleds: number): Strip {
+        let pin = DigitalPin.P1
+        switch (rjpin) {
+            case Pin.J1:
+                pin = DigitalPin.P8
+                break;
+            case Pin.J2:
+                pin = DigitalPin.P12
+                break;
+            case Pin.J3:
+                pin = DigitalPin.P14
+                break;
+            case Pin.J4:
+                pin = DigitalPin.P16
+                break;
+        }
+        let strip = new Strip();
+        let stride = 3; // rgb mode
+        strip.buf = pins.createBuffer(numleds * stride);
+        strip.start = 0;
+        strip._length = numleds;
+        strip._mode = 0; // rgb mode
+        strip._matrixWidth = 0;
+        strip.setPin(pin)
+        return strip;
+    }
+
+    //% subcategory=Neopixel
+    //% color=#EA5532
+    //% block="make color with: red %red, green %green and blue %blue"
+    //% block.loc.nl="maak kleur met: rood %red, groen %green en blauw %blue "
+    export function rgbColor(red: number, green: number, blue: number): number {
+        return packRGB(red, green, blue);
+    }
+}
 
 /*
 The CameraAI namespace is a revision of the ElecFreaks 'pxt-PlanetX-AI' library:
@@ -420,6 +721,10 @@ namespace CameraAI {
 Next code is original to the current 'pxt-soccer-player' library.
 (MIT-license)
 */
+
+CameraAI.init()
+ColorSensor.init()
+
 enum Player {
     //% block="green"
     //% block.loc.nl="groen"
