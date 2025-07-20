@@ -130,6 +130,7 @@ enum Color {
 }
 
 function rgb(color: Color) : number{
+basic.showNumber(1)
     let val = 0
     switch (color) {
         case Color.Green: val = 0x00FF00; break;
@@ -145,6 +146,7 @@ function rgb(color: Color) : number{
         case Color.Violet: val = 0x8a2be2; break;
         case Color.Purple: val = 0xFF00FF; break;
     }
+basic.showNumber(2)
     return val
 }
 
@@ -425,12 +427,14 @@ namespace LedRing {
     }
 
     export function setPixel(offset: number, red: number, green: number, blue: number): void {
+basic.showNumber(3)
         _buffer[offset + 0] = green;
         _buffer[offset + 1] = red;
         _buffer[offset + 2] = blue;
     }
 
     export function setPixelRGB(pixel: number, rgb: number): void {
+basic.showNumber(0)
         if (pixel < 0 || pixel >= 8)
             return;
         pixel *= 3;
@@ -465,9 +469,7 @@ namespace LedRing {
     }
 
     export function rainbow(dir: Rotation) {
-basic.showNumber(0)
         if (dir == Rotation.Clockwise) {
-basic.showNumber(1)
             setPixelRGB(0, rgb( Color.Red))
             setPixelRGB(1, rgb( Color.Orange))
             setPixelRGB(2, rgb( Color.Yellow))
@@ -478,7 +480,6 @@ basic.showNumber(1)
             setPixelRGB(7, rgb( Color.Purple))
         }
         else {
-basic.showNumber(1)
             setPixelRGB(7, rgb(Color.Red))
             setPixelRGB(6, rgb(Color.Orange))
             setPixelRGB(5, rgb(Color.Yellow))
@@ -488,7 +489,6 @@ basic.showNumber(1)
             setPixelRGB(1, rgb(Color.Violet))
             setPixelRGB(0, rgb(Color.Purple))
         }
-basic.showNumber(2)
     }
 
     export function fading(rgb: number, dir: Rotation) {
