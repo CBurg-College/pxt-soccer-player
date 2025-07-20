@@ -465,16 +465,6 @@ namespace LedRing {
 
     export function rainbow(rot: Rotation) {
         if (rot == Rotation.Clockwise) {
-            setPixelRGB(7, rgb(Color.Red))
-            setPixelRGB(6, rgb(Color.Orange))
-            setPixelRGB(5, rgb(Color.Yellow))
-            setPixelRGB(4, rgb(Color.Green))
-            setPixelRGB(3, rgb(Color.Blue))
-            setPixelRGB(2, rgb(Color.Indigo))
-            setPixelRGB(1, rgb(Color.Violet))
-            setPixelRGB(0, rgb(Color.Purple))
-        }
-        else {
             setPixelRGB(0, rgb(Color.Red))
             setPixelRGB(1, rgb(Color.Orange))
             setPixelRGB(2, rgb(Color.Yellow))
@@ -483,6 +473,16 @@ namespace LedRing {
             setPixelRGB(5, rgb(Color.Indigo))
             setPixelRGB(6, rgb(Color.Violet))
             setPixelRGB(7, rgb(Color.Purple))
+        }
+        else {
+            setPixelRGB(7, rgb(Color.Red))
+            setPixelRGB(6, rgb(Color.Orange))
+            setPixelRGB(5, rgb(Color.Yellow))
+            setPixelRGB(4, rgb(Color.Green))
+            setPixelRGB(3, rgb(Color.Blue))
+            setPixelRGB(2, rgb(Color.Indigo))
+            setPixelRGB(1, rgb(Color.Violet))
+            setPixelRGB(0, rgb(Color.Purple))
         }
         showBuffer()
         basic.pause(100)
@@ -522,6 +522,9 @@ namespace LedRing {
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
+basic.showNumber(red)
+basic.showNumber(green)
+basic.showNumber(blue)
         setClear();
         showBuffer()
         for (let i = 7; i >= 0; i--) {
