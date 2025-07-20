@@ -433,7 +433,6 @@ namespace LedRing {
     export function setPixelRGB(pixel: number, rgb: number): void {
         if (pixel < 0 || pixel >= 8)
             return;
-        pixel *= 3;
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
@@ -502,6 +501,7 @@ namespace LedRing {
             r = red / (i * 8)
             g = green / (i * 8)
             b = blue / (i * 8)
+basic.showNumber(r)
             if (rot == Rotation.Clockwise)
                 setPixel(7 - i, r, g, b)
             else
