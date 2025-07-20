@@ -5,7 +5,7 @@ the code below is a composition and refactoring of:
   https://github.com/elecfreaks/pxt-nezha/blob/master/main.ts
 - the ElecFreaks 'pxt-PlanetX' library:
   https://github.com/elecfreaks/pxt-PlanetX/blob/master/basic.ts
-  https://github.com/elecfreaks/pxt-PlanetX/blob/master/neopixel.ts
+  https://github.com/elecfreaks/pxt-PlanetX/blob/master/display.ts
 - the ElecFreaks 'pxt-PlanetX-AI' library:
   https://github.com/elecfreaks/pxt-PlanetX-AI/blob/master/main.ts
 All under MIT-license.
@@ -457,10 +457,14 @@ namespace LedRing {
     }
 
     export function rotate(rot: Rotation): void {
-        if (rot == Rotation.Clockwise)
+        if (rot == Rotation.Clockwise) {
             _buffer.rotate(3, 0, 24)
-        else
+basic.showString("C")
+        }
+        else {
             _buffer.rotate(-3, 0, 24)
+basic.showString("A")
+        }
     }
 
     export function rainbow(rot: Rotation) {
@@ -486,32 +490,6 @@ namespace LedRing {
         }
         showBuffer()
         basic.pause(100)
-        for (let i = 0; i < 7; i++) {
-            rotate(rot)
-            showBuffer()
-            basic.pause(100)
-        }
-    }
-
-    export function fading(color: Color, rot: Rotation) {
-        let col = rgb(color)
-        let red = (col >> 16) & 0xFF;
-        let green = (col >> 8) & 0xFF;
-        let blue = (col) & 0xFF;
-        let r, g, b: number
-        let dr = red / 8
-        let dg = green / 8
-        let db = blue / 8
-        for (let i = 7; i >= 1; i--) {
-            r = red - (i * dr)
-            g = green - (i * dg)
-            b = blue - (i * db)
-            if (rot == Rotation.Clockwise)
-                setPixel(7 - i, r, g, b)
-            else
-                setPixel(i, r, g, b)
-        }
-        showBuffer()
         for (let i = 0; i < 7; i++) {
             rotate(rot)
             showBuffer()
@@ -924,14 +902,6 @@ namespace CSoccerPlayer
 
     //% subcategory="Kleuren"
     //% color="#FFCC44"
-    //% block="rotate fading color %color %rot"
-    //% block.loc.nl="draai afnemende kleur %color %rot"
-    export function showFading(color: Color, rot: LedRing.Rotation) {
-        LedRing.fading(color, rot)
-    }
-
-    //% subcategory="Kleuren"
-    //% color="#FFCC44"
     //% block="rotate rainbow %rot"
     //% block.loc.nl="draai de regenboog %rot"
     export function showRainbow(rot: LedRing.Rotation) {
@@ -975,8 +945,18 @@ namespace CSoccerPlayer
     //% subcategory="Kleuren"
     //% group="Leds apart"
     //% color="#FFCC44"
-    //% block="rotate one position"
-    //% block.loc.nl="draai één positie"
+    //% block="rotate a full circle %rot"
+    //% block.loc.nl="draai een hele cirkel %rot"
+    export function circle(rot: LedRing.Rotation) {
+        for (let i = 0; i <= 7; i++)
+            LedRing.rotate(rot)
+    }
+
+    //% subcategory="Kleuren"
+    //% group="Leds apart"
+    //% color="#FFCC44"
+    //% block="rotate one position %rot"
+    //% block.loc.nl="draai één positie %rot"
     export function rotate(rot: LedRing.Rotation) {
         LedRing.rotate(rot)
     }
