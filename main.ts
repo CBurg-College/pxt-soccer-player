@@ -906,16 +906,16 @@ namespace CSoccerPlayer
 
     //% subcategory="Kleuren"
     //% color="#FFCC44"
-    //% block="perform a snake %rot with color %color"
-    //% block.loc.nl="make een slang %rot met kleur %color"
+    //% block="rotate a snake %rot with color %color"
+    //% block.loc.nl="draai een slang %rot met kleur %color"
     export function showSnake(rot: LedRing.Rotation, color: Color) {
         LedRing.snake(color, rot)
     }
 
     //% subcategory="Kleuren"
     //% color="#FFCC44"
-    //% block="fade out color %color %rot"
-    //% block.loc.nl="fade kleur %color %rot uit"
+    //% block="rotate fading color %color %rot"
+    //% block.loc.nl="draai afnemende kleur %color %rot"
     export function showFading(color: Color, rot: LedRing.Rotation) {
         LedRing.fading(color, rot)
     }
