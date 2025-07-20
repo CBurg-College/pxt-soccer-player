@@ -1,5 +1,6 @@
 /*
-Until the 'original' code, all code below is a refactoring of:
+From here to the 'pxt-soccer-player' specific code,
+the code below is a composition and refactoring of:
 - the ElecFreaks 'pxt-nezha' library:
   https://github.com/elecfreaks/pxt-nezha/blob/master/main.ts
 - the ElecFreaks 'pxt-PlanetX' library:
@@ -398,7 +399,7 @@ namespace ColorSensor {
 
 namespace LedRing {
 
-    enum Direction {
+    export enum Rotation {
         //% block="clockwise"
         //% block.loc.nl="rechtsom"
         Clockwise,
@@ -423,7 +424,7 @@ namespace LedRing {
         displaySendBuffer(_buffer, _pin);
     }
 
-    function setPixel(offset: number, red: number, green: number, blue: number): void {
+    export function setPixel(offset: number, red: number, green: number, blue: number): void {
         _buffer[offset + 0] = green;
         _buffer[offset + 1] = red;
         _buffer[offset + 2] = blue;
@@ -456,13 +457,15 @@ namespace LedRing {
         _buffer.fill(0, 0, 24);
     }
 
-    export function rotate(offset: number = 1): void {
-        offset = offset;
-        _buffer.rotate(-offset * 3, 0, 24)
+    export function rotate(rot: Rotation): void {
+        if (rot == Rotation.Clockwise)
+            _buffer.rotate(3, 0, 24)
+        else
+            _buffer.rotate(-3, 0, 24)
     }
 
-    export function rainbow(dir: Direction) {
-        if (dir == Direction.Clockwise) {
+    export function rainbow(dir: Rotation) {
+        if (dir == Rotation.Clockwise) {
             setPixelRGB(0, rgb( Color.Red))
             setPixelRGB(1, rgb( Color.Orange))
             setPixelRGB(2, rgb( Color.Yellow))
@@ -484,7 +487,7 @@ namespace LedRing {
         }
     }
 
-    export function fading(rgb: number) {
+    export function fading(rgb: number, dir: Rotation) {
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
@@ -493,10 +496,35 @@ namespace LedRing {
             r = red / (i * 8)
             g = green / (i * 8)
             b = blue / (i * 8)
-            if (Direction.Clockwise)
+            if (dir == Rotation.Clockwise)
                 setPixel(7 - i, r, g, b)
             else
                 setPixel(i, r, g, b)
+        }
+    }
+
+    export function snake(rgb: number, dir: Rotation) {
+        let red = (rgb >> 16) & 0xFF;
+        let green = (rgb >> 8) & 0xFF;
+        let blue = (rgb) & 0xFF;
+        let r, g, b: number
+        setClear();
+        showBuffer()
+        for (let i = 7; i >= 0; i--) {
+            if (dir == Rotation.Clockwise)
+                setPixel(7 - i, red, green, blue)
+            else
+                setPixel(i, red, green, blue)
+            showBuffer()
+            basic.pause(50)
+        }
+        for (let i = 7; i >= 0; i--) {
+            if (dir == Rotation.Clockwise)
+                setPixel(7 - i, 0, 0, 0)
+            else
+                setPixel(i, 0, 0, 0)
+            showBuffer()
+            basic.pause(50)
         }
     }
 }
@@ -597,17 +625,24 @@ enum Player {
     Blue
 }
 
-function isPlayer() : Player {
-    let player = Player.Green
-    if (ColorSensor.readColor() == Color.Blue)
-        player = Player.Blue
-    return player
-}
-
-let PLAYER = isPlayer()
+let PLAYER = Player.Green
 let PLAYING = false
 let HEADING = input.compassHeading()
 let OBSTRUCTIONS = 0
+
+function showPlayerColor() {
+    if (PLAYER == Player.Green)
+        LedRing.setRingRGB(rgb(Color.Green))
+    else
+        LedRing.setRingRGB(rgb(Color.Blue))
+}
+
+input.onButtonPressed(Button.A, function () {
+    PLAYER = Player.Green
+    if (ColorSensor.readColor() == Color.Blue)
+        PLAYER = Player.Blue
+    showPlayerColor()
+})
 
 type eventHandler = () => void
 let EventOutsideField: eventHandler
@@ -643,17 +678,21 @@ function handle(cmd:number) {
         case CSoccer.COMMAND.GoalGreen:
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
+                showPlayerColor()
             }
             else {
                 if (EventGoalAgainst) EventGoalAgainst()
+                showPlayerColor()
             }
             break;
         case CSoccer.COMMAND.GoalBlue:
             if (PLAYER == Player.Blue) {
                 if (EventGoalAsset) EventGoalAsset()
+                showPlayerColor()
             }
             else {
                 if (EventGoalAgainst) EventGoalAgainst()
+                showPlayerColor()
             }
             break;
         case CSoccer.COMMAND.ObstructGreen:
@@ -676,18 +715,22 @@ function handle(cmd:number) {
         case CSoccer.COMMAND.DisqualBlue:
             if (PLAYER == Player.Green) {
                 if (EventWinner) EventWinner()
+                showPlayerColor()
             }
             else {
                 if (EventLoser) EventLoser()
+                showPlayerColor()
             }
             break;
         case CSoccer.COMMAND.WinnerBlue:
         case CSoccer.COMMAND.DisqualGreen:
             if (PLAYER == Player.Blue) {
                 if (EventWinner) EventWinner()
+                showPlayerColor()
             }
             else {
                 if (EventLoser) EventLoser()
+                showPlayerColor()
             }
             break;
     }
@@ -696,6 +739,7 @@ function handle(cmd:number) {
 
 function display() {
     basic.showNumber(OBSTRUCTIONS)
+    showPlayerColor()
 }
 
 //% color="#00CC00" icon="\uf1f9"
@@ -741,6 +785,13 @@ namespace CSoccerPlayer
     export function onEventOutsideField(programmableCode: () => void): void {
         EventOutsideField = programmableCode;
     }
+
+    basic.forever(function () {
+        if (PLAYING) {
+            if (ColorSensor.readColor() != Color.White)
+                if (EventOutsideField) EventOutsideField()
+        }
+    })
 
     //% block="motor %motor runs in inverted direction"
     //% block.loc.nl="motor %motor draait in omgekeerde richting"
@@ -835,12 +886,83 @@ namespace CSoccerPlayer
         }
     }
 
-    basic.forever(function () {
-        if (PLAYING) {
-            if (ColorSensor.readColor() != Color.White)
-                if (EventOutsideField) EventOutsideField()
+    //% subcategory="Kleuren"
+    //% color="#FFCC44"
+    //% block="fade out color %color %rot"
+    //% block.loc.nl="fade kleur %color %rot uit"
+    export function showFading(color: Color, rot: LedRing.Rotation) {
+        LedRing.fading(color, rot)
+        for (let i = 0; i < 8; i++) {
+            LedRing.rotate(rot)
+            LedRing.showBuffer()
+            basic.pause(100)
         }
-    })
+    }
+
+    //% subcategory="Kleuren"
+    //% color="#FFCC44"
+    //% block="rotate rainbow %rot"
+    //% block.loc.nl="toon de kleur %color"
+    export function showRainbow(rot: LedRing.Rotation) {
+        LedRing.rainbow(rot)
+        for (let i = 0; i < 8; i++) {
+            LedRing.rotate(rot)
+            LedRing.showBuffer()
+            basic.pause(100)
+        }
+    }
+
+    //% subcategory="Kleuren"
+    //% color="#FFCC44"
+    //% block="show color %color"
+    //% block.loc.nl="toon de kleur %color"
+    export function showColor(color: Color) {
+        LedRing.setRingRGB(rgb(color))
+    }
+
+    //% subcategory="Kleuren"
+    //% color="#FFCC44"
+    //% block="show player color"
+    //% block.loc.nl="toon de spelerkleur"
+    export function playerColor() {
+        showPlayerColor()
+    }
+
+    //% subcategory="Kleuren"
+    //% group="Leds apart"
+    //% color="#FFCC44"
+    //% block="turn all leds off"
+    //% block.loc.nl="schakel alle leds uit"
+    export function turnLedsOff() {
+        LedRing.setClear()
+    }
+
+    //% subcategory="Kleuren"
+    //% group="Leds apart"
+    //% color="#FFCC44"
+    //% block="turn selected leds on"
+    //% block.loc.nl="schakel de ingestelde leds aan"
+    export function turnLedsOn() {
+        LedRing.showBuffer()
+    }
+
+    //% subcategory="Kleuren"
+    //% group="Leds apart"
+    //% color="#FFCC44"
+    //% block="rotate one position"
+    //% block.loc.nl="draai één positie"
+    export function rotate(rot: LedRing.Rotation) {
+        LedRing.rotate(rot)
+    }
+
+    //% subcategory="Kleuren"
+    //% group="Leds apart"
+    //% color="#FFCC44"
+    //% block="set led %num to color %color"
+    //% block.loc.nl="stel led %num in op kleur %color"
+    export function setLed(num: number, color: Color) {
+        LedRing.setPixelRGB(num, rgb(color))
+    }
 
     //% subcategory="Show"
     //% color="#FFCC00"
