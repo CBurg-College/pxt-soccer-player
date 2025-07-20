@@ -465,7 +465,9 @@ namespace LedRing {
     }
 
     export function rainbow(dir: Rotation) {
+basic.showNumber(0)
         if (dir == Rotation.Clockwise) {
+basic.showNumber(1)
             setPixelRGB(0, rgb( Color.Red))
             setPixelRGB(1, rgb( Color.Orange))
             setPixelRGB(2, rgb( Color.Yellow))
@@ -476,6 +478,7 @@ namespace LedRing {
             setPixelRGB(7, rgb( Color.Purple))
         }
         else {
+basic.showNumber(1)
             setPixelRGB(7, rgb(Color.Red))
             setPixelRGB(6, rgb(Color.Orange))
             setPixelRGB(5, rgb(Color.Yellow))
@@ -485,6 +488,7 @@ namespace LedRing {
             setPixelRGB(1, rgb(Color.Violet))
             setPixelRGB(0, rgb(Color.Purple))
         }
+basic.showNumber(2)
     }
 
     export function fading(rgb: number, dir: Rotation) {
