@@ -1,7 +1,13 @@
 /*
-The Nezha namespace is a revision of the ElecFreaks 'pxt-nezha' library:
-https://github.com/elecfreaks/pxt-nezha/blob/master/main.ts
-(MIT-license)
+Until the 'original' code, all code below is a refactoring of:
+- the ElecFreaks 'pxt-nezha' library:
+  https://github.com/elecfreaks/pxt-nezha/blob/master/main.ts
+- the ElecFreaks 'pxt-PlanetX' library:
+  https://github.com/elecfreaks/pxt-PlanetX/blob/master/basic.ts
+  https://github.com/elecfreaks/pxt-PlanetX/blob/master/neopixel.ts
+- the ElecFreaks 'pxt-PlanetX-AI' library:
+  https://github.com/elecfreaks/pxt-PlanetX-AI/blob/master/main.ts
+All under MIT-license.
 */
 
 namespace Nezha {
@@ -73,9 +79,162 @@ namespace Nezha {
 }
 
 /*
-The ColorSensor namespace is a revision of the ElecFreaks 'pxt-PlanetX' library:
-https://github.com/elecfreaks/pxt-PlanetX/blob/master/basic.ts
-(MIT-license)
+General color module
+Used by ColorSensor, LedRing and CameraAI
+*/
+
+// !!!    DO NOT CHANGE THE COLOR ORDER !!!    //
+// !!! THEY ARE USED THIS WAY BY CAMERA-AI !!! //
+
+enum Color {
+    //% block="none"
+    //% block.loc.nl="geen"
+    None,
+    //% block="green"
+    //% block.loc.nl="groen"
+    Green,
+    //% block="blue"
+    //% block.loc.nl="blauw"
+    Blue,
+    //% block="yellow"
+    //% block.loc.nl="geel"
+    Yellow,
+    //% block="black"
+    //% block.loc.nl="zwart"
+    Black,
+    //% block="red"
+    //% block.loc.nl="rood"
+    Red,
+    //% block="white"
+    //% block.loc.nl="wit"
+    White,
+    //% block="orange"
+    //% block.loc.nl="oranje"
+    Orange,
+    //% block="cyan"
+    //% block.loc.nl="cyaan"
+    Cyan,
+    //% block="magenta"
+    //% block.loc.nl="magenta"
+    Magenta,
+    //% block="indigo"
+    //% block.loc.nl="indigo"
+    Indigo,
+    //% block="violet"
+    //% block.loc.nl="violet"
+    Violet,
+    //% block="purple"
+    //% block.loc.nl="paars"
+    Purple
+}
+
+function rgb(color: Color) : number{
+    let val = 0
+    switch (color) {
+        case Color.Green: val = 0x00FF00; break;
+        case Color.Blue: val = 0x0000FF; break;
+        case Color.Yellow: val = 0xFFFF00; break;
+        case Color.Black: val = 0x000000; break;
+        case Color.Red: val = 0xFF0000; break;
+        case Color.White: val = 0xFFFFFF; break;
+        case Color.Orange: val = 0xFFA500; break;
+        case Color.Cyan: val = 0x00FFFF; break;
+        case Color.Magenta: val = 0xFF00FF; break;
+        case Color.Indigo: val = 0x4b0082; break;
+        case Color.Violet: val = 0x8a2be2; break;
+        case Color.Purple: val = 0xFF00FF; break;
+    }
+    return val
+}
+
+function pack(red: number, green: number, blue: number): number {
+    let rgb = ((red & 0xFF) << 16) | ((green & 0xFF) << 8) | (blue & 0xFF)
+    return rgb;
+}
+
+function rgb2hsl(color_r: number, color_g: number, color_b: number): number {
+    let Hue = 0
+    let R = color_r * 100 / 255;
+    let G = color_g * 100 / 255;
+    let B = color_b * 100 / 255;
+    let maxVal = Math.max(R, Math.max(G, B))
+    let minVal = Math.min(R, Math.min(G, B))
+    let Delta = maxVal - minVal;
+
+    if (Delta < 0) {
+        Hue = 0;
+    }
+    else if (maxVal == R && G >= B) {
+        Hue = (60 * ((G - B) * 100 / Delta)) / 100;
+    }
+    else if (maxVal == R && G < B) {
+        Hue = (60 * ((G - B) * 100 / Delta) + 360 * 100) / 100;
+    }
+    else if (maxVal == G) {
+        Hue = (60 * ((B - R) * 100 / Delta) + 120 * 100) / 100;
+    }
+    else if (maxVal == B) {
+        Hue = (60 * ((R - G) * 100 / Delta) + 240 * 100) / 100;
+    }
+    return Hue
+}
+
+function hsl2rgb(h: number, s: number, l: number): number {
+    h = Math.round(h);
+    s = Math.round(s);
+    l = Math.round(l);
+
+    h = h % 360;
+    s = Math.clamp(0, 99, s);
+    l = Math.clamp(0, 99, l);
+    let c = Math.idiv((((100 - Math.abs(2 * l - 100)) * s) << 8), 10000); //chroma, [0,255]
+    let h1 = Math.idiv(h, 60);//[0,6]
+    let h2 = Math.idiv((h - h1 * 60) * 256, 60);//[0,255]
+    let temp = Math.abs((((h1 % 2) << 8) + h2) - 256);
+    let x = (c * (256 - (temp))) >> 8;//[0,255], second largest component of this color
+    let r$: number;
+    let g$: number;
+    let b$: number;
+    if (h1 == 0) {
+        r$ = c;
+        g$ = x;
+        b$ = 0;
+    }
+    else if (h1 == 1) {
+        r$ = x;
+        g$ = c;
+        b$ = 0;
+    }
+    else if (h1 == 2) {
+        r$ = 0;
+        g$ = c;
+        b$ = x;
+    }
+    else if (h1 == 3) {
+        r$ = 0;
+        g$ = x;
+        b$ = c;
+    }
+    else if (h1 == 4) {
+        r$ = x;
+        g$ = 0;
+        b$ = c;
+    }
+    else if (h1 == 5) {
+        r$ = c;
+        g$ = 0;
+        b$ = x;
+    }
+    let m = Math.idiv((Math.idiv((l * 2 << 8), 100) - c), 2);
+    let r = r$ + m;
+    let g = g$ + m;
+    let b = b$ + m;
+    let rgb = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF)
+    return rgb;
+}
+
+/*
+PlanetX color sensor
 */
 
 namespace ColorSensor {
@@ -95,25 +254,6 @@ namespace ColorSensor {
     const APDS9960_BDATAH = 0x9B
     const APDS9960_GCONF4 = 0xAB
     const APDS9960_AICLEAR = 0xE7
-
-    export enum Color {
-        //% block="black"
-        Black,
-        //% block="red"
-        Red,
-        //% block="green"
-        Green,
-        //% block="blue"
-        Blue,
-        //% block="cyan"
-        Cyan,
-        //% block="magenta"
-        Magenta,
-        //% block="yellow"
-        Yellow,
-        //% block="white"
-        White
-    }
 
     let color_first_init = false
     let color_new_init = false
@@ -145,33 +285,6 @@ namespace ColorSensor {
         // set to color mode
         let tmp = i2cread_color(APDS9960_ADDR, APDS9960_ENABLE) | 0x2;
         i2cwrite_color(APDS9960_ADDR, APDS9960_ENABLE, tmp);
-    }
-
-    function rgb2hsl(color_r: number, color_g: number, color_b: number): number {
-        let Hue = 0
-        let R = color_r * 100 / 255;
-        let G = color_g * 100 / 255;
-        let B = color_b * 100 / 255;
-        let maxVal = Math.max(R, Math.max(G, B))
-        let minVal = Math.min(R, Math.min(G, B))
-        let Delta = maxVal - minVal;
-
-        if (Delta < 0) {
-            Hue = 0;
-        }
-        else if (maxVal == R && G >= B) {
-            Hue = (60 * ((G - B) * 100 / Delta)) / 100;
-        }
-        else if (maxVal == R && G < B) {
-            Hue = (60 * ((G - B) * 100 / Delta) + 360 * 100) / 100;
-        }
-        else if (maxVal == G) {
-            Hue = (60 * ((B - R) * 100 / Delta) + 120 * 100) / 100;
-        }
-        else if (maxVal == B) {
-            Hue = (60 * ((R - G) * 100 / Delta) + 240 * 100) / 100;
-        }
-        return Hue
     }
 
     export function readColor(): Color {
@@ -283,289 +396,113 @@ namespace ColorSensor {
 
 }
 
-//% color="#00CC00" icon="\uf1f9"
-//% block="LedRing"
-//% block.loc.nl="LedRing"
 namespace LedRing {
 
-    export enum Color {
-        //% block="red"
-        //% block.loc.nl="rood"
-        Red = 0xFF0000,
-        //% block="orange"
-        //% block.loc.nl="oranje"
-        Orange = 0xFFA500,
-        //% block="yellow"
-        //% block.loc.nl="geel"
-        Yellow = 0xFFFF00,
-        //% block="green"
-        //% block.loc.nl="groen"
-        Green = 0x00FF00,
-        //% block="blue"
-        //% block.loc.nl="blauw"
-        Blue = 0x0000FF,
-        //% block="indigo"
-        //% block.loc.nl="indigo"
-        Indigo = 0x4b0082,
-        //% block="violet"
-        //% block.loc.nl="violet"
-        Violet = 0x8a2be2,
-        //% block="purple"
-        //% block.loc.nl="paars"
-        Purple = 0xFF00FF,
-        //% block="white"
-        //% block.loc.nl="wit"
-        White = 0xFFFFFF,
-        //% block="black"
-        //% block.loc.nl="zwart"
-        Black = 0x000000
-    }
-
-    function packRGB(a: number, b: number, c: number): number {
-        return ((a & 0xFF) << 16) | ((b & 0xFF) << 8) | (c & 0xFF);
-    }
-
-    function unpackR(rgb: number): number {
-        let r = (rgb >> 16) & 0xFF;
-        return r;
-    }
-
-    function unpackG(rgb: number): number {
-        let g = (rgb >> 8) & 0xFF;
-        return g;
-    }
-
-    function unpackB(rgb: number): number {
-        let b = (rgb) & 0xFF;
-        return b;
-    }
-
-    //% block="hue %h|saturation %s|luminosity %l"
-    //% subcategory=Neopixel
-    //% color=#EA5532
-    export function hsl(h: number, s: number, l: number): number {
-        h = Math.round(h);
-        s = Math.round(s);
-        l = Math.round(l);
-
-        h = h % 360;
-        s = Math.clamp(0, 99, s);
-        l = Math.clamp(0, 99, l);
-        let c = Math.idiv((((100 - Math.abs(2 * l - 100)) * s) << 8), 10000); //chroma, [0,255]
-        let h1 = Math.idiv(h, 60);//[0,6]
-        let h2 = Math.idiv((h - h1 * 60) * 256, 60);//[0,255]
-        let temp = Math.abs((((h1 % 2) << 8) + h2) - 256);
-        let x = (c * (256 - (temp))) >> 8;//[0,255], second largest component of this color
-        let r$:
-            number;
-        let g$:
-            number;
-        let b$:
-            number;
-        if (h1 == 0) {
-            r$ = c;
-            g$ = x;
-            b$ = 0;
-        }
-        else if (h1 == 1) {
-            r$ = x;
-            g$ = c;
-            b$ = 0;
-        }
-        else if (h1 == 2) {
-            r$ = 0;
-            g$ = c;
-            b$ = x;
-        }
-        else if (h1 == 3) {
-            r$ = 0;
-            g$ = x;
-            b$ = c;
-        }
-        else if (h1 == 4) {
-            r$ = x;
-            g$ = 0;
-            b$ = c;
-        }
-        else if (h1 == 5) {
-            r$ = c;
-            g$ = 0;
-            b$ = x;
-        }
-        let m = Math.idiv((Math.idiv((l * 2 << 8), 100) - c), 2);
-        let r = r$ + m;
-        let g = g$ + m;
-        let b = b$ + m;
-        return packRGB(r, g, b);
+    enum Direction {
+        //% block="clockwise"
+        //% block.loc.nl="rechtsom"
+        Clockwise,
+        //% block="anti-clockwise"
+        //% block.loc.nl="linksom"
+        AClockwise
     }
 
     //% shim=light::sendWS2812Buffer
     declare function displaySendBuffer(buf: Buffer, pin: DigitalPin): void;
 
-    let _buffer: Buffer;
-    let _pin: DigitalPin;
-    let _brightness: number;
-    let _start: number; // start offset in LED strip
-    let _length: number; // number of LEDs
-    let _mode: number;
-    let _matrixWidth: number; // number of leds in a matrix - if any
+    let _buffer : any
+    let _pin : DigitalPin
 
-    //% block="%strip|show color %rgb=neopixel_colors"
-    //% color=#EA5532
-    //% subcategory=Neopixel
-    export function showColor(rgb: number) {
-        rgb = rgb >> 0;
-        setAllRGB(rgb);
-        show();
+    export function init() {
+        _buffer = pins.createBuffer(24); // 8 pixels of 3 byte (rgb)
+        _pin = DigitalPin.P14;
+        pins.digitalWritePin(_pin, 0);
     }
 
-    //% block="%strip|led color at %pixeloffset as %rgb=neopixel_colors"
-    //% block.loc.nl="%strip|kleur de led op %pixeloffset met %rgb=neopixel_colors"
-    //% color=#EA5532
-    //% parts="neopixel"
-    //% subcategory=Neopixel
-    export function setPixelColor(pixeloffset: number, rgb: number): void {
-        setPixelRGB(pixeloffset >> 0, rgb >> 0);
-        // call show when all pixels have been set
-    }
-
-    //% block="%strip|Do now"
-    //% block.loc.nl="%strip|Nu doen"
-    //% block.loc.nl="%strip|"
-    //% subcategory=Neopixel
-    export function show() {
-        // call when all pixel have been set by setPixelColor
+    export function showBuffer() {
         displaySendBuffer(_buffer, _pin);
     }
 
-    //% block="%strip|all leds off"
-    //% block="%strip|alle leds uit"
-    //% color=#EA5532
-    //% subcategory=Neopixel
-    export function clear(): void {
-        const stride = 3; // rgb mode
-        _buffer.fill(0, _start * stride, _length * stride);
-        // call show when all pixels have been set
-    }
-
-    //% block="%strip|rotate by %offset positions" 
-    //% block.loc.nl="%strip|draai met %offset plaatsen"
-    //% color=#EA5532
-    //% subcategory=Neopixel
-    export function rotate(offset: number = 1): void {
-        offset = offset >> 0;
-        const stride = 3; // rgb mode
-        _buffer.rotate(-offset * stride, _start * stride, _length * stride)
-        // call show when all pixels have been set
-    }
-
-    //% block="%strip|show a rainbow" 
-    //% block.loc.nl="%strip|toon een regenboog"
-    //% color=#EA5532
-    //% subcategory=Neopixel
-    export function rainbow() {
-        setPixelColor(0, Color.Red)
-        setPixelColor(1, Color.Orange)
-        setPixelColor(2, Color.Yellow)
-        setPixelColor(3, Color.Green)
-        setPixelColor(4, Color.Blue)
-        setPixelColor(5, Color.Indigo)
-        setPixelColor(6, Color.Violet)
-        setPixelColor(7, Color.Purple)
-        show()
-    }
-
-    function setPin(pin: DigitalPin): void {
-        _pin = pin;
-        pins.digitalWritePin(_pin, 0);
-        // don't yield to avoid races on initialization
-    }
-
-    function setBufferRGB(offset: number, red: number, green: number, blue: number): void {
-        // rgb mode:
+    function setPixel(offset: number, red: number, green: number, blue: number): void {
         _buffer[offset + 0] = green;
         _buffer[offset + 1] = red;
         _buffer[offset + 2] = blue;
     }
 
-    function setAllRGB(rgb: number) {
-        let red = unpackR(rgb);
-        let green = unpackG(rgb);
-        let blue = unpackB(rgb);
-
-        const br = _brightness;
-        if (br < 255) {
-            red = (red * br) >> 8;
-            green = (green * br) >> 8;
-            blue = (blue * br) >> 8;
-        }
-        const end = _start + _length;
-        const stride = 3; // rgb mode
-        for (let i = _start; i < end; ++i) {
-            setBufferRGB(i * stride, red, green, blue)
-        }
-    }
-
-    function setPixelRGB(pixeloffset: number, rgb: number): void {
-        if (pixeloffset < 0
-            || pixeloffset >= _length)
+    export function setPixelRGB(pixel: number, rgb: number): void {
+        if (pixel < 0 || pixel >= 8)
             return;
-
-        let stride = 3; // rgb mode
-        pixeloffset = (pixeloffset + _start) * stride;
-
-        let red = unpackR(rgb);
-        let green = unpackG(rgb);
-        let blue = unpackB(rgb);
-
-        let br = _brightness;
-        if (br < 255) {
-            red = (red * br) >> 8;
-            green = (green * br) >> 8;
-            blue = (blue * br) >> 8;
-        }
-        setBufferRGB(pixeloffset, red, green, blue)
+        pixel *= 3;
+        let red = (rgb >> 16) & 0xFF;
+        let green = (rgb >> 8) & 0xFF;
+        let blue = (rgb) & 0xFF;
+        setPixel(pixel, red, green, blue)
     }
 
-    export function create(rjpin: Nezha.Connector, numleds: number) {
-        let pin = DigitalPin.P1
-        switch (rjpin) {
-            case Nezha.Connector.J1:
-                pin = DigitalPin.P8
-                break;
-            case Nezha.Connector.J2:
-                pin = DigitalPin.P12
-                break;
-            case Nezha.Connector.J3:
-                pin = DigitalPin.P14
-                break;
-            case Nezha.Connector.J4:
-                pin = DigitalPin.P16
-                break;
-        }
-        let stride = 3; // rgb mode
-        _buffer = pins.createBuffer(numleds * stride);
-        _start = 0;
-        _length = numleds;
-        _mode = 0; // rgb mode
-        _matrixWidth = 0;
-        setPin(pin)
+    export function setRing(red: number, green: number, blue: number) {
+        for (let i = 0; i < 8; ++i)
+            setPixel(i * 3, red, green, blue)
     }
 
-    //% color=#EA5532
-    //% subcategory=Neopixel
-    //% block="make color with: red %red, green %green and blue %blue"
-    //% block.loc.nl="maak kleur met: rood %red, groen %green en blauw %blue "
-    function rgbColor(red: number, green: number, blue: number): number {
-        return packRGB(red, green, blue);
+    export function setRingRGB(rgb: number) {
+        let red = (rgb >> 16) & 0xFF;
+        let green = (rgb >> 8) & 0xFF;
+        let blue = (rgb) & 0xFF;
+        for (let i = 0; i < 8; ++i)
+            setPixel(i * 3, red, green, blue)
+    }
+
+    export function setClear(): void {
+        _buffer.fill(0, 0, 24);
+    }
+
+    export function rotate(offset: number = 1): void {
+        offset = offset;
+        _buffer.rotate(-offset * 3, 0, 24)
+    }
+
+    export function rainbow(dir: Direction) {
+        if (dir == Direction.Clockwise) {
+            setPixelRGB(0, rgb( Color.Red))
+            setPixelRGB(1, rgb( Color.Orange))
+            setPixelRGB(2, rgb( Color.Yellow))
+            setPixelRGB(3, rgb( Color.Green))
+            setPixelRGB(4, rgb( Color.Blue))
+            setPixelRGB(5, rgb( Color.Indigo))
+            setPixelRGB(6, rgb( Color.Violet))
+            setPixelRGB(7, rgb( Color.Purple))
+        }
+        else {
+            setPixelRGB(7, rgb(Color.Red))
+            setPixelRGB(6, rgb(Color.Orange))
+            setPixelRGB(5, rgb(Color.Yellow))
+            setPixelRGB(4, rgb(Color.Green))
+            setPixelRGB(3, rgb(Color.Blue))
+            setPixelRGB(2, rgb(Color.Indigo))
+            setPixelRGB(1, rgb(Color.Violet))
+            setPixelRGB(0, rgb(Color.Purple))
+        }
+    }
+
+    export function fading(rgb: number) {
+        let red = (rgb >> 16) & 0xFF;
+        let green = (rgb >> 8) & 0xFF;
+        let blue = (rgb) & 0xFF;
+        let r, g, b: number
+        for (let i = 7; i >= 0; i--) {
+            r = red / (i * 8)
+            g = green / (i * 8)
+            b = blue / (i * 8)
+            if (Direction.Clockwise)
+                setPixel(7 - i, r, g, b)
+            else
+                setPixel(i, r, g, b)
+        }
     }
 }
 
-
 /*
-The CameraAI namespace is a revision of the ElecFreaks 'pxt-PlanetX-AI' library:
-https://github.com/elecfreaks/pxt-PlanetX-AI/blob/master/main.ts
-(MIT-license)
+PlanetX AI-Camera
 */
 
 namespace CameraAI {
@@ -583,30 +520,6 @@ namespace CameraAI {
         Color = 9
     }
 
-    export enum Colors {
-        //% block="green"
-        //% block.loc.nl = "groen"
-        Green = 1,
-        //% block="blue"
-        //% block.loc.nl="blauw"
-        Blue = 2,
-        //% block="yellow"
-        //% block.loc.nl = "geel"
-        Yellow = 3,
-        //% block="black"
-        //% block.loc.nl="zwart"
-        Black = 4,
-        //% block="red"
-        //% block.loc.nl = "rood"
-        Red = 5,
-        //% block="white"
-        //% block.loc.nl = "wit"
-        White = 6
-    }
-
-    /**
-     * initialize the AI camera module
-     */
     export function init(): void {
         let timeout = input.runningTime()
         while (!(pins.i2cReadNumber(CameraAddr, NumberFormat.Int8LE))) {
@@ -618,10 +531,6 @@ namespace CameraAI {
         }
     }
 
-    /**
-     * set to the type of recognition
-     * rec: Recognize.Ball or RecognizeColor
-     */
     export function recognize(item: Recognize): void {
         ITEM = item
         let buff = pins.i2cReadBuffer(CameraAddr, 9)
@@ -630,68 +539,41 @@ namespace CameraAI {
         pins.i2cWriteBuffer(CameraAddr, buff)
     }
 
-    /**
-     * fetch one image from the AI-Lens
-     */
     export function fetchCamera(): void {
         DataBuffer = pins.i2cReadBuffer(CameraAddr, 9)
         basic.pause(30)
     }
 
-    /**
-     * report the number of recognized items in the image
-     */
     export function itemCount(): number {
         if (DataBuffer[0] != ITEM)
             return 0
         return DataBuffer[7]
     }
 
-    /**
-     * report the x-position of an item
-     */
     export function itemPosX(): number {
         return DataBuffer[2]
     }
 
-    /**
-     * report the y-position of an item
-     */
     export function itemPosY(): number {
         return DataBuffer[3]
     }
 
-    /**
-     * report the size of an item
-     */
     export function itemSize(): number {
         return DataBuffer[4]
     }
 
-    /**
-     * report the color of an item
-     */
     export function itemColor(): number {
         return DataBuffer[1]
     }
 
-    /**
-     * report if an item has a sudden color
-     */
-    export function itemIsColor(col: Colors): boolean {
+    export function itemIsColor(col: Color): boolean {
         return (DataBuffer[1] == col)
     }
 
-    /**
-     * report the id of an item
-     */
     export function itemID(): number {
         return DataBuffer[8]
     }
 
-    /**
-     * report the confidence of an item
-     */
     export function itemConfidence(): number {
         return 100 - DataBuffer[6]
     }
@@ -704,6 +586,7 @@ Next code is original to the current 'pxt-soccer-player' library.
 
 CameraAI.init()
 ColorSensor.init()
+LedRing.init()
 
 enum Player {
     //% block="green"
@@ -716,7 +599,7 @@ enum Player {
 
 function isPlayer() : Player {
     let player = Player.Green
-    if (ColorSensor.readColor() == ColorSensor.Color.Blue)
+    if (ColorSensor.readColor() == Color.Blue)
         player = Player.Blue
     return player
 }
@@ -841,12 +724,6 @@ namespace CSoccerPlayer
     //             M1    M2    M3    M4
     let INVERT = [false,false,false,false]
 
-    //% block="motor %motor runs in inverted direction"
-    //% block.loc.nl="motor %motor draait in omgekeerde richting"
-    export function invertMotor( motor: Nezha.Motor) {
-        INVERT[motor] = true
-    }
-
     function go(speedM2: number, speedM3: number) {
         if (INVERT[Nezha.Motor.M2])
             Nezha.motorSpeed(Nezha.Motor.M2, -speedM2)
@@ -865,6 +742,13 @@ namespace CSoccerPlayer
         EventOutsideField = programmableCode;
     }
 
+    //% block="motor %motor runs in inverted direction"
+    //% block.loc.nl="motor %motor draait in omgekeerde richting"
+    export function invertMotor(motor: Nezha.Motor) {
+        INVERT[motor] = true
+    }
+
+    //% subcategory="Bal-controle"
     //% block="shoot the ball"
     //% block.loc.nl="schiet de bal"
     export function shoot() {
@@ -873,6 +757,16 @@ namespace CSoccerPlayer
         }
     }
 
+    //% subcategory="Bal-controle"
+    //% block="take the ball in possession"
+    //% block.loc.nl="neem balbezit"
+    export function possessBall() {
+        if (PLAYING) {
+            Nezha.servoAngle(Nezha.Servo.S1, 120)
+        }
+    }
+
+    //% subcategory="Bewegen"
     //% block="run %cm cm %dir"
     //% block.loc.nl="rijd %cm cm %dir"
     //% cm.max=20 cm.min=0
@@ -885,6 +779,7 @@ namespace CSoccerPlayer
         }
     }
 
+    //% subcategory="Bewegen"
     //% block="turn to the goal"
     //% block.loc.nl="draai richting het doel"
     export function findGoal() {
@@ -896,11 +791,12 @@ namespace CSoccerPlayer
                 if (!CameraAI.itemCount())
                     continue
                 basic.pause(1)
-            } while (CameraAI.itemIsColor(CameraAI.Colors.Blue))
+            } while (CameraAI.itemIsColor(Color.Blue))
             go(0, 0)
         }
     }
 
+    //% subcategory="Bewegen"
     //% block="turn to the start direction"
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
@@ -911,14 +807,7 @@ namespace CSoccerPlayer
         }
     }
 
-    //% block="take the ball in possession"
-    //% block.loc.nl="neem balbezit"
-    export function possessBall() {
-        if (PLAYING) {
-            Nezha.servoAngle(Nezha.Servo.S1, 120)
-        }
-    }
-
+    //% subcategory="Bewegen"
     //% block="run to the ball"
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
@@ -932,6 +821,7 @@ namespace CSoccerPlayer
         }
     }
 
+    //% subcategory="Bewegen"
     //% block="turn to the ball"
     //% block.loc.nl="draai richting de bal"
     export function findBall() {
@@ -945,20 +835,14 @@ namespace CSoccerPlayer
         }
     }
 
-    //% block="the start signal was given"
-    //% block.loc.nl="het startsignaal werd gegeven"
-    export function waitForStart() : boolean {
-        return PLAYING
-    }
-
     basic.forever(function () {
         if (PLAYING) {
-            if (ColorSensor.readColor() != ColorSensor.Color.White)
+            if (ColorSensor.readColor() != Color.White)
                 if (EventOutsideField) EventOutsideField()
         }
     })
 
-    //% group="Extra"
+    //% subcategory="Show"
     //% color="#FFCC00"
     //% block="after an obstruction"
     //% block.loc.nl="na een obstructie"
@@ -966,23 +850,23 @@ namespace CSoccerPlayer
         EventObstruction = programmableCode;
     }
 
-    //% group="Extra"
+    //% subcategory="Show"
     //% color="#FFCC00"
     //% block="when the loser"
-    //% block.loc.nl="wanneer verloren"
+    //% block.loc.nl="als er verloren is"
     export function onEventLoser(programmableCode: () => void): void {
         EventLoser = programmableCode;
     }
 
-    //% group="Extra"
+    //% subcategory="Show"
     //% color="#FFCC00"
     //% block="when the winner"
-    //% block.loc.nl="wanneer gewonnen"
+    //% block.loc.nl="als er gewonnen is"
     export function onEventWinner(programmableCode: () => void): void {
         EventWinner = programmableCode;
     }
 
-    //% group="Extra"
+    //% subcategory="Show"
     //% color="#FFCC00"
     //% block="when a goal against"
     //% block.loc.nl="bij een doelpunt tegen"
@@ -990,7 +874,7 @@ namespace CSoccerPlayer
         EventGoalAgainst = programmableCode;
     }
 
-    //% group="Extra"
+    //% subcategory="Show"
     //% color="#FFCC00"
     //% block="when an asset goal"
     //% block.loc.nl="bij een doelpunt voor"
