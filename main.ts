@@ -506,7 +506,7 @@ namespace LedRing {
             setPixelRGB(0, rgb(Color.Purple))
         }
         showBuffer()
-        basic.pause(100)
+        basic.pause(_pace)
         for (let i = 0; i < 7; i++) {
             rotate(rot)
             showBuffer()
@@ -536,7 +536,7 @@ namespace LedRing {
             else
                 setPixel(i, 0, 0, 0)
             showBuffer()
-            basic.pause(50)
+            basic.pause(_pace)
         }
         if (dir == Rotation.Clockwise)
             setPixel(0, 0, 0, 0)
@@ -970,9 +970,9 @@ namespace CSoccerPlayer
     //% subcategory="Kleuren"
     //% group="Leds apart"
     //% color="#FFCC44"
-    //% block="%pace rotate a full circle %rot"
-    //% block.loc.nl="draai %pace een hele cirkel %rot"
-    export function circle(pace: LedRing.Pace, rot: LedRing.Rotation) {
+    //% block="rotate a full circle %rot at %pace pace"
+    //% block.loc.nl="draai een hele cirkel %rot in %pace tempo"
+    export function circle(rot: LedRing.Rotation, pace: LedRing.Pace) {
         LedRing.showBuffer()
         for (let i = 0; i <= 7; i++) {
             LedRing.rotate(rot)
