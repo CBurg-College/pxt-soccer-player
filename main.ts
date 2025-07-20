@@ -799,6 +799,12 @@ namespace CSoccerPlayer
         INVERT[motor] = true
     }
 
+    //% block="game started"
+    //% block.loc.nl="spel is gestart"
+    export function isPlaying() {
+        return PLAYING
+    }
+
     //% subcategory="Bal-controle"
     //% block="shoot the ball"
     //% block.loc.nl="schiet de bal"
@@ -884,6 +890,14 @@ namespace CSoccerPlayer
             } while (!CameraAI.itemCount())
             go(0 , 0)
         }
+    }
+
+    //% subcategory="Kleuren"
+    //% color="#FFCC44"
+    //% block="perform a snake %rot with color %color"
+    //% block.loc.nl="make een slang %rot met kleur %color"
+    export function showSnake(rot: LedRing.Rotation, color: Color) {
+        LedRing.snake(color, rot)
     }
 
     //% subcategory="Kleuren"
