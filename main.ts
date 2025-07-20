@@ -464,8 +464,8 @@ namespace LedRing {
             _buffer.rotate(-3, 0, 24)
     }
 
-    export function rainbow(dir: Rotation) {
-        if (dir == Rotation.Clockwise) {
+    export function rainbow(rot: Rotation) {
+        if (rot == Rotation.Clockwise) {
             setPixelRGB(0, rgb( Color.Red))
             setPixelRGB(1, rgb( Color.Orange))
             setPixelRGB(2, rgb( Color.Yellow))
@@ -485,21 +485,33 @@ namespace LedRing {
             setPixelRGB(1, rgb(Color.Violet))
             setPixelRGB(0, rgb(Color.Purple))
         }
+        showBuffer()
+        for (let i = 0; i < 7; i++) {
+            rotate(rot)
+            showBuffer()
+            basic.pause(100)
+        }
     }
 
-    export function fading(rgb: number, dir: Rotation) {
+    export function fading(rgb: number, rot: Rotation) {
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
         let r, g, b: number
-        for (let i = 7; i >= 0; i--) {
+        for (let i = 7; i >= 1; i--) {
             r = red / (i * 8)
             g = green / (i * 8)
             b = blue / (i * 8)
-            if (dir == Rotation.Clockwise)
+            if (rot == Rotation.Clockwise)
                 setPixel(7 - i, r, g, b)
             else
                 setPixel(i, r, g, b)
+        }
+        showBuffer()
+        for (let i = 0; i < 7; i++) {
+            rotate(rot)
+            showBuffer()
+            basic.pause(100)
         }
     }
 
@@ -507,7 +519,6 @@ namespace LedRing {
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
-        let r, g, b: number
         setClear();
         showBuffer()
         for (let i = 7; i >= 0; i--) {
@@ -518,6 +529,7 @@ namespace LedRing {
             showBuffer()
             basic.pause(50)
         }
+        showBuffer()
         for (let i = 7; i >= 0; i--) {
             if (dir == Rotation.Clockwise)
                 setPixel(7 - i, 0, 0, 0)
@@ -906,24 +918,14 @@ namespace CSoccerPlayer
     //% block.loc.nl="fade kleur %color %rot uit"
     export function showFading(color: Color, rot: LedRing.Rotation) {
         LedRing.fading(color, rot)
-        for (let i = 0; i < 8; i++) {
-            LedRing.rotate(rot)
-            LedRing.showBuffer()
-            basic.pause(100)
-        }
     }
 
     //% subcategory="Kleuren"
     //% color="#FFCC44"
     //% block="rotate rainbow %rot"
-    //% block.loc.nl="toon de kleur %color"
+    //% block.loc.nl="draai de regenboog %rot"
     export function showRainbow(rot: LedRing.Rotation) {
         LedRing.rainbow(rot)
-        for (let i = 0; i < 8; i++) {
-            LedRing.rotate(rot)
-            LedRing.showBuffer()
-            basic.pause(100)
-        }
     }
 
     //% subcategory="Kleuren"
