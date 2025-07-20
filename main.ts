@@ -411,11 +411,10 @@ namespace LedRing {
     //% shim=light::sendWS2812Buffer
     declare function displaySendBuffer(buf: Buffer, pin: DigitalPin): void;
 
-    let _buffer : any
+    let _buffer = pins.createBuffer(24); // 8 pixels of 3 byte (rgb)
     let _pin : DigitalPin
 
     export function init() {
-        _buffer = pins.createBuffer(24); // 8 pixels of 3 byte (rgb)
         _pin = DigitalPin.P14;
         pins.digitalWritePin(_pin, 0);
     }
@@ -437,9 +436,7 @@ namespace LedRing {
         let red = (rgb >> 16) & 0xFF;
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
-basic.showNumber(0)
         setPixel(pixel, red, green, blue)
-basic.showNumber(1)
     }
 
     export function setRing(red: number, green: number, blue: number) {
@@ -460,12 +457,10 @@ basic.showNumber(1)
     }
 
     export function rotate(rot: Rotation): void {
-basic.showNumber(3)
         if (rot == Rotation.Clockwise)
             _buffer.rotate(3, 0, 24)
         else
             _buffer.rotate(-3, 0, 24)
-basic.showNumber(4)
     }
 
     export function rainbow(dir: Rotation) {
@@ -489,7 +484,6 @@ basic.showNumber(4)
             setPixelRGB(1, rgb(Color.Violet))
             setPixelRGB(0, rgb(Color.Purple))
         }
-basic.showNumber(2)
     }
 
     export function fading(rgb: number, dir: Rotation) {
