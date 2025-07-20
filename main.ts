@@ -424,6 +424,7 @@ namespace LedRing {
     }
 
     export function setPixel(offset: number, red: number, green: number, blue: number): void {
+        offset *= 3
         _buffer[offset + 0] = green;
         _buffer[offset + 1] = red;
         _buffer[offset + 2] = blue;
