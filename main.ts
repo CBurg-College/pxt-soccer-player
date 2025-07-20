@@ -921,7 +921,7 @@ namespace CSoccerPlayer
     //% color="#FFCC44"
     //% block="rotate a snake %rot with color %color"
     //% block.loc.nl="draai een slang %rot met kleur %color"
-    //% color.defl=Wit
+    //% color.defl=Color.White
     export function showSnake(rot: LedRing.Rotation, color: Color) {
         LedRing.snake(color, rot)
     }
@@ -938,7 +938,7 @@ namespace CSoccerPlayer
     //% color="#FFCC44"
     //% block="show color %color"
     //% block.loc.nl="toon de kleur %color"
-    //% color.defl=Wit
+    //% color.defl=Color.White
     export function showColor(color: Color) {
         LedRing.setRingRGB(rgb(color))
     }
@@ -974,7 +974,7 @@ namespace CSoccerPlayer
     //% color="#FFCC44"
     //% block="rotate a full circle %rot at %pace pace"
     //% block.loc.nl="draai een hele cirkel %rot in %pace tempo"
-    //% pace.defl=Normaal
+    //% pace.defl=Pace.Normal
     export function circle(rot: LedRing.Rotation, pace: LedRing.Pace) {
         LedRing.showBuffer()
         for (let i = 0; i <= 7; i++) {
@@ -999,7 +999,7 @@ namespace CSoccerPlayer
     //% color="#FFCC44"
     //% block="set led %num to color %color"
     //% block.loc.nl="stel led %num in op kleur %color"
-    //% color.defl=Wit
+    //% color.defl=Color.White
     //% num.min=1 num.max=8
     export function setLed(num: number, color: Color) {
         LedRing.setPixelRGB(num - 1, rgb(color))
