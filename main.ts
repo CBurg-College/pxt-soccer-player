@@ -442,7 +442,7 @@ namespace LedRing {
 
     export function setRing(red: number, green: number, blue: number) {
         for (let i = 0; i < 8; ++i)
-            setPixel(i * 3, red, green, blue)
+            setPixel(i, red, green, blue)
     }
 
     export function setRingRGB(rgb: number) {
@@ -450,7 +450,7 @@ namespace LedRing {
         let green = (rgb >> 8) & 0xFF;
         let blue = (rgb) & 0xFF;
         for (let i = 0; i < 8; ++i)
-            setPixel(i * 3, red, green, blue)
+            setPixel(i, red, green, blue)
     }
 
     export function setClear(): void {
@@ -530,7 +530,7 @@ namespace LedRing {
             basic.pause(50)
         }
         showBuffer()
-        for (let i = 7; i >= 0; i--) {
+        for (let i = 6; i >= 0; i--) {
             if (dir == Rotation.Clockwise)
                 setPixel(7 - i, 0, 0, 0)
             else
@@ -538,6 +538,11 @@ namespace LedRing {
             showBuffer()
             basic.pause(50)
         }
+        if (dir == Rotation.Clockwise)
+            setPixel(0, 0, 0, 0)
+        else
+            setPixel(7, 0, 0, 0)
+        showBuffer()
     }
 }
 
