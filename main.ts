@@ -457,14 +457,10 @@ namespace LedRing {
     }
 
     export function rotate(rot: Rotation): void {
-        if (rot == Rotation.Clockwise) {
-            _buffer.rotate(3, 0, 24)
-basic.showString("C")
-        }
-        else {
+        if (rot == Rotation.Clockwise)
             _buffer.rotate(-3, 0, 24)
-basic.showString("A")
-        }
+        else
+            _buffer.rotate(3, 0, 24)
     }
 
     export function rainbow(rot: Rotation) {
@@ -948,8 +944,11 @@ namespace CSoccerPlayer
     //% block="rotate a full circle %rot"
     //% block.loc.nl="draai een hele cirkel %rot"
     export function circle(rot: LedRing.Rotation) {
-        for (let i = 0; i <= 7; i++)
+        LedRing.showBuffer()
+        for (let i = 0; i <= 7; i++) {
             LedRing.rotate(rot)
+            LedRing.showBuffer()
+        }
     }
 
     //% subcategory="Kleuren"
