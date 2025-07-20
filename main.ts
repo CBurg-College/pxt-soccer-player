@@ -493,10 +493,11 @@ namespace LedRing {
         }
     }
 
-    export function fading(rgb: number, rot: Rotation) {
-        let red = (rgb >> 16) & 0xFF;
-        let green = (rgb >> 8) & 0xFF;
-        let blue = (rgb) & 0xFF;
+    export function fading(color: Color, rot: Rotation) {
+        let col = rgb(color)
+        let red = (col >> 16) & 0xFF;
+        let green = (col >> 8) & 0xFF;
+        let blue = (col) & 0xFF;
         let r, g, b: number
         let dr = red / 8
         let dg = green / 8
@@ -518,13 +519,11 @@ namespace LedRing {
         }
     }
 
-    export function snake(rgb: number, dir: Rotation) {
-        let red = (rgb >> 16) & 0xFF;
-        let green = (rgb >> 8) & 0xFF;
-        let blue = (rgb) & 0xFF;
-basic.showNumber(red)
-basic.showNumber(green)
-basic.showNumber(blue)
+    export function snake(color: Color, dir: Rotation) {
+        let col = rgb(color)
+        let red = (col >> 16) & 0xFF;
+        let green = (col >> 8) & 0xFF;
+        let blue = (col) & 0xFF;
         setClear();
         showBuffer()
         for (let i = 7; i >= 0; i--) {
