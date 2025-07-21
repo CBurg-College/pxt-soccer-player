@@ -689,10 +689,10 @@ function handle(cmd:number) {
     }
 */
     switch (cmd) {
-        case CSoccer.COMMAND.Start:
+        case CMatch.COMMAND.Start:
             PLAYING = true
             break;
-        case CSoccer.COMMAND.GoalGreen:
+        case CMatch.COMMAND.PointA:
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
                 showPlayerColor()
@@ -702,7 +702,7 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CSoccer.COMMAND.GoalBlue:
+        case CMatch.COMMAND.PointB:
             if (PLAYER == Player.Blue) {
                 if (EventGoalAsset) EventGoalAsset()
                 showPlayerColor()
@@ -712,24 +712,24 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CSoccer.COMMAND.ObstructGreen:
+        case CMatch.COMMAND.ObstructA:
             if (PLAYER == Player.Green) {
                 OBSTRUCTIONS++
                 display()
                 if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CSoccer.COMMAND.WinnerBlue)
+                    radio.sendNumber(CMatch.COMMAND.WinnerB)
             }
             break;
-        case CSoccer.COMMAND.ObstructBlue:
+        case CMatch.COMMAND.ObstructB:
             if (PLAYER == Player.Blue) {
                 OBSTRUCTIONS++
                 display()
                 if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CSoccer.COMMAND.WinnerGreen)
+                    radio.sendNumber(CMatch.COMMAND.WinnerA)
             }
             break;
-        case CSoccer.COMMAND.WinnerGreen:
-        case CSoccer.COMMAND.DisqualBlue:
+        case CMatch.COMMAND.WinnerA:
+        case CMatch.COMMAND.DisqualB:
             if (PLAYER == Player.Green) {
                 if (EventWinner) EventWinner()
                 showPlayerColor()
@@ -739,8 +739,8 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CSoccer.COMMAND.WinnerBlue:
-        case CSoccer.COMMAND.DisqualGreen:
+        case CMatch.COMMAND.WinnerB:
+        case CMatch.COMMAND.DisqualA:
             if (PLAYER == Player.Blue) {
                 if (EventWinner) EventWinner()
                 showPlayerColor()
@@ -751,7 +751,7 @@ function handle(cmd:number) {
             }
             break;
     }
-    PLAYING = (cmd == CSoccer.COMMAND.Start)
+    PLAYING = (cmd == CMatch.COMMAND.Start)
 }
 
 function display() {

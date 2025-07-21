@@ -5,7 +5,7 @@
         "core": "*",
         "radio": "*",
         "microphone": "*",
-        "pxt-soccer": "github:cburg-college/pxt-soccer#82903049454842bb3f1433d4700908921d5d5b36"
+        "pxt-match": "github:CBurg-College/pxt-match#152533135b4b4e515cd890987b1d52be80b9b5cd"
     },
     "files": [
         "main.blocks",
