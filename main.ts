@@ -677,15 +677,14 @@ function handle(cmd:number) {
     export enum COMMAND {
         Start,
         Stop,
-        GoalGreen,
-        GoalBlue,
-        ObstructGreen,
-        ObstructBlue,
-        WinnerGreen,
-        WinnerBlue,
-        DisqualGreen,
-        DisqualBlue,
-        Reset
+        PointA, // Green
+        PointB, // Blue
+        DisallowA,
+        DisallowB,
+        WinnerA,
+        WinnerB,
+        DisqualA,
+        DisqualB
     }
 */
     switch (cmd) {
@@ -710,22 +709,6 @@ function handle(cmd:number) {
             else {
                 if (EventGoalAgainst) EventGoalAgainst()
                 showPlayerColor()
-            }
-            break;
-        case CMatch.COMMAND.ObstructA:
-            if (PLAYER == Player.Green) {
-                OBSTRUCTIONS++
-                display()
-                if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CMatch.COMMAND.WinnerB)
-            }
-            break;
-        case CMatch.COMMAND.ObstructB:
-            if (PLAYER == Player.Blue) {
-                OBSTRUCTIONS++
-                display()
-                if (OBSTRUCTIONS > 2)
-                    radio.sendNumber(CMatch.COMMAND.WinnerA)
             }
             break;
         case CMatch.COMMAND.WinnerA:
