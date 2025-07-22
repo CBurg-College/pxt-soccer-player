@@ -661,6 +661,12 @@ input.onButtonPressed(Button.A, function () {
     showPlayerColor()
 })
 
+input.onButtonPressed(Button.B, function () {
+    PLAYING = false
+    Nezha.motorSpeed(Nezha.Motor.M2, 0)
+    Nezha.motorSpeed(Nezha.Motor.M3, 0)
+})
+
 type eventHandler = () => void
 let EventOutsideField: eventHandler
 let EventGoalAsset: eventHandler
