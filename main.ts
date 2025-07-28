@@ -675,8 +675,7 @@ let EventObstruction: eventHandler
 let EventWinner: eventHandler
 let EventLoser: eventHandler
 
-function handle(cmd:number) {
-
+setMatchHandling(() => {
 /*
     commands are defined in pxt-soccer as:
 
@@ -693,11 +692,11 @@ function handle(cmd:number) {
         DisqualB
     }
 */
-    switch (cmd) {
-        case CMatch.COMMAND.Start:
+    switch (MATCH) {
+        case Match.Start:
             PLAYING = true
             break;
-        case CMatch.COMMAND.PointA:
+        case Match.PointA:
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
                 showPlayerColor()
@@ -707,7 +706,7 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CMatch.COMMAND.PointB:
+        case Match.PointB:
             if (PLAYER == Player.Blue) {
                 if (EventGoalAsset) EventGoalAsset()
                 showPlayerColor()
@@ -717,8 +716,8 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CMatch.COMMAND.WinnerA:
-        case CMatch.COMMAND.DisqualB:
+        case Match.WinnerA:
+        case Match.DisqualB:
             if (PLAYER == Player.Green) {
                 if (EventWinner) EventWinner()
                 showPlayerColor()
@@ -728,8 +727,8 @@ function handle(cmd:number) {
                 showPlayerColor()
             }
             break;
-        case CMatch.COMMAND.WinnerB:
-        case CMatch.COMMAND.DisqualA:
+        case Match.WinnerB:
+        case Match.DisqualA:
             if (PLAYER == Player.Blue) {
                 if (EventWinner) EventWinner()
                 showPlayerColor()
@@ -740,13 +739,17 @@ function handle(cmd:number) {
             }
             break;
     }
-    PLAYING = (cmd == CMatch.COMMAND.Start)
-}
+    PLAYING = (MATCH == Match.Start)
+})
 
 function display() {
     basic.showNumber(OBSTRUCTIONS)
     showPlayerColor()
 }
+
+displayAfterLogo(() => {
+    display()
+})
 
 //% color="#00CC00" icon="\uf1f9"
 //% block="Soccer"
