@@ -11,223 +11,6 @@ the code below is a composition and refactoring of:
 All under MIT-license.
 */
 
-namespace Nezha {
-
-    export enum Connector {
-        //% block="J1" 
-        J1 = DigitalPin.P8,
-        //% block="J2"
-        J2 = DigitalPin.P12,
-        //% block="J3"
-        J3 = DigitalPin.P14,
-        //% block="J4"
-        J4 = DigitalPin.P16
-    }
-
-    export enum Motor {
-        //% block="M1"
-        M1,
-        //% block="M2"
-        M2,
-        //% block="M3"
-        M3,
-        //% block="M4"
-        M4
-    }
-
-    export function motorSpeed(motor: Motor, speed: number): void {
-
-        let iic_buffer = pins.createBuffer(4);
-
-        if (speed > 100) speed = 100
-        else
-            if (speed < -100) speed = -100
-
-        iic_buffer[0] = motor + 1
-        if (speed >= 0) {
-            iic_buffer[1] = 0x01; // forward
-            iic_buffer[2] = speed;
-        }
-        else {
-            iic_buffer[1] = 0x02; // reverse
-            iic_buffer[2] = -speed;
-        }
-        iic_buffer[3] = 0;
-
-        pins.i2cWriteBuffer(0x10, iic_buffer);
-    }
-
-    export enum Servo {
-        //% block="S1" 
-        S1,
-        //% block="S2"
-        S2,
-        //% block="S3" 
-        S3,
-        //% block="S4"
-        S4
-    }
-
-    export function servoAngle(servo: Servo, angle: number): void {
-        let iic_buffer = pins.createBuffer(4);
-        iic_buffer[0] = 0x10 + servo
-        iic_buffer[1] = angle;
-        iic_buffer[2] = 0;
-        iic_buffer[3] = 0;
-        pins.i2cWriteBuffer(0x10, iic_buffer);
-    }
-
-}
-
-namespace LedRing {
-
-    export enum Rotation {
-        //% block="clockwise"
-        //% block.loc.nl="rechtsom"
-        Clockwise,
-        //% block="anti-clockwise"
-        //% block.loc.nl="linksom"
-        AClockwise
-    }
-
-    export enum Pace {
-        //% block="slow"
-        //% block.loc.nl="laag"
-        Slow = 100,
-        //% block="normal"
-        //% block.loc.nl="gewoon"
-        Normal = 50,
-        //% block="fast"
-        //% block.loc.nl="hoog"
-        Fast = 25
-    }
-
-    //% shim=light::sendWS2812Buffer
-    declare function displaySendBuffer(buf: Buffer, pin: DigitalPin): void;
-
-    let _buffer = pins.createBuffer(24); // 8 pixels of 3 byte (rgb)
-    let _pin : DigitalPin
-    let _pace = Pace.Normal
-
-    export function init() {
-        _pin = DigitalPin.P14;
-        pins.digitalWritePin(_pin, 0);
-    }
-
-    export function showBuffer() {
-        displaySendBuffer(_buffer, _pin);
-    }
-
-    export function setPixel(offset: number, red: number, green: number, blue: number): void {
-        offset *= 3
-        _buffer[offset + 0] = green;
-        _buffer[offset + 1] = red;
-        _buffer[offset + 2] = blue;
-    }
-
-    export function setPixelRGB(pixel: number, rgb: number): void {
-        if (pixel < 0 || pixel >= 8)
-            return;
-        let red = (rgb >> 16) & 0xFF;
-        let green = (rgb >> 8) & 0xFF;
-        let blue = (rgb) & 0xFF;
-        setPixel(pixel, red, green, blue)
-    }
-
-    export function setRing(red: number, green: number, blue: number) {
-        for (let i = 0; i < 8; ++i)
-            setPixel(i, red, green, blue)
-    }
-
-    export function setRingRGB(rgb: number) {
-        let red = (rgb >> 16) & 0xFF;
-        let green = (rgb >> 8) & 0xFF;
-        let blue = (rgb) & 0xFF;
-        for (let i = 0; i < 8; ++i)
-            setPixel(i, red, green, blue)
-    }
-
-    export function setClear(): void {
-        _buffer.fill(0, 0, 24);
-    }
-
-    export function setPace(pace: Pace) {
-        _pace = pace
-    }
-
-    export function getPace() : Pace {
-        return _pace
-    }
-
-    export function rotate(rot: Rotation): void {
-        if (rot == Rotation.Clockwise)
-            _buffer.rotate(-3, 0, 24)
-        else
-            _buffer.rotate(3, 0, 24)
-    }
-
-    export function rainbow(rot: Rotation) {
-        if (rot == Rotation.Clockwise) {
-            setPixelRGB(0, rgb(Color.Red))
-            setPixelRGB(1, rgb(Color.Orange))
-            setPixelRGB(2, rgb(Color.Yellow))
-            setPixelRGB(3, rgb(Color.Green))
-            setPixelRGB(4, rgb(Color.Blue))
-            setPixelRGB(5, rgb(Color.Indigo))
-            setPixelRGB(6, rgb(Color.Violet))
-            setPixelRGB(7, rgb(Color.Purple))
-        }
-        else {
-            setPixelRGB(7, rgb(Color.Red))
-            setPixelRGB(6, rgb(Color.Orange))
-            setPixelRGB(5, rgb(Color.Yellow))
-            setPixelRGB(4, rgb(Color.Green))
-            setPixelRGB(3, rgb(Color.Blue))
-            setPixelRGB(2, rgb(Color.Indigo))
-            setPixelRGB(1, rgb(Color.Violet))
-            setPixelRGB(0, rgb(Color.Purple))
-        }
-        showBuffer()
-        basic.pause(_pace)
-        for (let i = 0; i < 7; i++) {
-            rotate(rot)
-            showBuffer()
-            basic.pause(_pace)
-        }
-    }
-
-    export function snake(color: Color, dir: Rotation) {
-        let col = rgb(color)
-        let red = (col >> 16) & 0xFF;
-        let green = (col >> 8) & 0xFF;
-        let blue = (col) & 0xFF;
-        setClear();
-        showBuffer()
-        for (let i = 7; i >= 0; i--) {
-            if (dir == Rotation.Clockwise)
-                setPixel(7 - i, red, green, blue)
-            else
-                setPixel(i, red, green, blue)
-            showBuffer()
-            basic.pause(_pace)
-        }
-        showBuffer()
-        for (let i = 6; i >= 0; i--) {
-            if (dir == Rotation.Clockwise)
-                setPixel(7 - i, 0, 0, 0)
-            else
-                setPixel(i, 0, 0, 0)
-            showBuffer()
-            basic.pause(_pace)
-        }
-        if (dir == Rotation.Clockwise)
-            setPixel(0, 0, 0, 0)
-        else
-            setPixel(7, 0, 0, 0)
-        showBuffer()
-    }
-}
-
 /*
 PlanetX AI-Camera
 */
@@ -345,8 +128,9 @@ input.onButtonPressed(Button.A, function () {
 
 input.onButtonPressed(Button.B, function () {
     PLAYING = false
-    Nezha.motorSpeed(Nezha.Motor.M2, 0)
-    Nezha.motorSpeed(Nezha.Motor.M3, 0)
+    Nezha.setTwoWheelSpeed(0,0)
+    MotorSpeed(Motor.M2, 0)
+    MotorSpeed(Motor.M3, 0)
 })
 
 type eventHandler = () => void
@@ -460,14 +244,14 @@ namespace CSoccerPlayer
     let INVERT = [false,false,false,false]
 
     function go(speedM2: number, speedM3: number) {
-        if (INVERT[Nezha.Motor.M2])
-            Nezha.motorSpeed(Nezha.Motor.M2, -speedM2)
+        if (INVERT[Motor.M2])
+            MotorSpeed(Motor.M2, -speedM2)
         else
-            Nezha.motorSpeed(Nezha.Motor.M2, speedM2)
-        if (INVERT[Nezha.Motor.M3])
-            Nezha.motorSpeed(Nezha.Motor.M3, -speedM3)
+            MotorSpeed(Motor.M2, speedM2)
+        if (INVERT[Motor.M3])
+            MotorSpeed(Motor.M3, -speedM3)
         else
-            Nezha.motorSpeed(Nezha.Motor.M3, speedM3)
+            MotorSpeed(Motor.M3, speedM3)
     }
 
     //% color="#FFCC00"
@@ -486,7 +270,7 @@ namespace CSoccerPlayer
 
     //% block="motor %motor runs in inverted direction"
     //% block.loc.nl="motor %motor draait in omgekeerde richting"
-    export function invertMotor(motor: Nezha.Motor) {
+    export function invertMotor(motor: Motor) {
         INVERT[motor] = true
     }
 
