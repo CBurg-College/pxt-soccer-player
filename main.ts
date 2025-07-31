@@ -1,102 +1,8 @@
-/*
-From here to the 'pxt-soccer-player' specific code,
-the code below is a composition and refactoring of:
-- the ElecFreaks 'pxt-nezha' library:
-  https://github.com/elecfreaks/pxt-nezha/blob/master/main.ts
-- the ElecFreaks 'pxt-PlanetX' library:
-  https://github.com/elecfreaks/pxt-PlanetX/blob/master/basic.ts
-  https://github.com/elecfreaks/pxt-PlanetX/blob/master/display.ts
-- the ElecFreaks 'pxt-PlanetX-AI' library:
-  https://github.com/elecfreaks/pxt-PlanetX-AI/blob/master/main.ts
-All under MIT-license.
-*/
-
-/*
-PlanetX AI-Camera
-*/
-
-namespace CameraAI {
-
-    const CameraAddr = 0X14;
-    let DataBuffer = pins.createBuffer(9);
-    let ITEM = 0
-
-    export enum Recognize {
-        //% block="balls"
-        //% block.loc.nl="ballen"
-        Ball = 7,
-        //% block="colors"
-        //% block.loc.nl="kleuren"
-        Color = 9
-    }
-
-    export function init(): void {
-        let timeout = input.runningTime()
-        while (!(pins.i2cReadNumber(CameraAddr, NumberFormat.Int8LE))) {
-            if (input.runningTime() - timeout > 30000) {
-                while (true) {
-                    basic.showString("Init of AI-Lens failed")
-                }
-            }
-        }
-    }
-
-    export function recognize(item: Recognize): void {
-        ITEM = item
-        let buff = pins.i2cReadBuffer(CameraAddr, 9)
-        buff[0] = 0x20
-        buff[1] = item
-        pins.i2cWriteBuffer(CameraAddr, buff)
-    }
-
-    export function fetchCamera(): void {
-        DataBuffer = pins.i2cReadBuffer(CameraAddr, 9)
-        basic.pause(30)
-    }
-
-    export function itemCount(): number {
-        if (DataBuffer[0] != ITEM)
-            return 0
-        return DataBuffer[7]
-    }
-
-    export function itemPosX(): number {
-        return DataBuffer[2]
-    }
-
-    export function itemPosY(): number {
-        return DataBuffer[3]
-    }
-
-    export function itemSize(): number {
-        return DataBuffer[4]
-    }
-
-    export function itemColor(): number {
-        return DataBuffer[1]
-    }
-
-    export function itemIsColor(col: Color): boolean {
-        return (DataBuffer[1] == col)
-    }
-
-    export function itemID(): number {
-        return DataBuffer[8]
-    }
-
-    export function itemConfidence(): number {
-        return 100 - DataBuffer[6]
-    }
-}
-
-/*
-Next code is original to the current 'pxt-soccer-player' library.
-(MIT-license)
-*/
-
 CameraAI.init()
 ColorSensor.init()
 LedRing.init()
+Nezha.setLeftMotor(Motor.M2, false)
+Nezha.setRightMotor(Motor.M3, true)
 
 enum Player {
     //% block="green"
@@ -129,8 +35,6 @@ input.onButtonPressed(Button.A, function () {
 input.onButtonPressed(Button.B, function () {
     PLAYING = false
     Nezha.setTwoWheelSpeed(0,0)
-    MotorSpeed(Motor.M2, 0)
-    MotorSpeed(Motor.M3, 0)
 })
 
 type eventHandler = () => void
@@ -142,22 +46,6 @@ let EventWinner: eventHandler
 let EventLoser: eventHandler
 
 setMatchHandling(() => {
-/*
-    commands are defined in pxt-soccer as:
-
-    export enum COMMAND {
-        Start,
-        Stop,
-        PointA, // Green
-        PointB, // Blue
-        DisallowA,
-        DisallowB,
-        WinnerA,
-        WinnerB,
-        DisqualA,
-        DisqualB
-    }
-*/
     switch (MATCH) {
         case Match.Start:
             PLAYING = true
@@ -222,6 +110,8 @@ displayAfterLogo(() => {
 //% block.loc.nl="Voetbal"
 namespace CSoccerPlayer
 {
+    let TMPOSSESS = 0
+
     function isHeading() : boolean {
         let heading = input.compassHeading()
         if ((HEADING >= 354 || HEADING <= 5) && (heading >= 355 || heading <= 5))
@@ -240,20 +130,6 @@ namespace CSoccerPlayer
         Reverse
     }
 
-    //             M1    M2    M3    M4
-    let INVERT = [false,false,false,false]
-
-    function go(speedM2: number, speedM3: number) {
-        if (INVERT[Motor.M2])
-            MotorSpeed(Motor.M2, -speedM2)
-        else
-            MotorSpeed(Motor.M2, speedM2)
-        if (INVERT[Motor.M3])
-            MotorSpeed(Motor.M3, -speedM3)
-        else
-            MotorSpeed(Motor.M3, speedM3)
-    }
-
     //% color="#FFCC00"
     //% block="when outside the field"
     //% block.loc.nl="wanneer buiten het speelveld"
@@ -262,17 +138,19 @@ namespace CSoccerPlayer
     }
 
     basic.forever(function () {
+        if (TMPOSSESS != 0 && control.millis() > TMPOSSESS)
+            shoot()
         if (PLAYING) {
-            if (ColorSensor.read() != Color.White)
+            let color = ColorSensor.read()
+            if (color != Color.White && color != Color.Green) {
+                if (TMPOSSESS) {
+                    shoot()
+                    TMPOSSESS = 0
+                }
                 if (EventOutsideField) EventOutsideField()
+            }
         }
     })
-
-    //% block="motor %motor runs in inverted direction"
-    //% block.loc.nl="motor %motor draait in omgekeerde richting"
-    export function invertMotor(motor: Motor) {
-        INVERT[motor] = true
-    }
 
     //% block="game started"
     //% block.loc.nl="spel is gestart"
@@ -285,7 +163,8 @@ namespace CSoccerPlayer
     //% block.loc.nl="schiet de bal"
     export function shoot() {
         if (PLAYING) {
-            Nezha.servoAngle(Nezha.Servo.S1, 65)
+            Nezha.servoAngle(Servo.S1, 65)
+            TMPOSSESS = 0
         }
     }
 
@@ -294,20 +173,20 @@ namespace CSoccerPlayer
     //% block.loc.nl="neem balbezit"
     export function possessBall() {
         if (PLAYING) {
-            Nezha.servoAngle(Nezha.Servo.S1, 120)
+            Nezha.servoAngle(Servo.S1, 120)
+            TMPOSSESS = control.millis() + 5000
         }
     }
 
     //% subcategory="Bewegen"
-    //% block="run %cm cm %dir"
-    //% block.loc.nl="rijd %cm cm %dir"
-    //% cm.max=20 cm.min=0
-    export function run(cm: number, dir: Direction) {
+    //% block="attack"
+    //% block.loc.nl="val aan"
+    export function attack() {
+        TMPOSSESS = control.millis() + 1000
         if (PLAYING) {
-            let speed = (dir ? -15 : 15)
-            go(speed, speed)
-            basic.pause(cm * 1500)
-            go(0, 0)
+            Nezha.setTwoWheelSpeed(16, 16)
+            while (TMPOSSESS) { basic.pause(1) }
+            Nezha.setTwoWheelSpeed(0, 0)
         }
     }
 
@@ -317,14 +196,12 @@ namespace CSoccerPlayer
     export function findGoal() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Color)
-            go(15, -15)
+            Nezha.setTwoWheelSpeed(8,-8)
             do {
                 CameraAI.fetchCamera()
-                if (!CameraAI.itemCount())
-                    continue
                 basic.pause(1)
-            } while (CameraAI.itemIsColor(Color.Blue))
-            go(0, 0)
+            } while (!CameraAI.itemIsColor(Color.Green))
+            Nezha.setTwoWheelSpeed(0, 0)
         }
     }
 
@@ -333,9 +210,9 @@ namespace CSoccerPlayer
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
         if (PLAYING) {
-            go(15, -15)
+            Nezha.setTwoWheelSpeed(15, -15)
             while (!isHeading()) { basic.pause(1) }
-            go(0, 0)
+            Nezha.setTwoWheelSpeed(0, 0)
         }
     }
 
@@ -344,12 +221,23 @@ namespace CSoccerPlayer
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
         if (PLAYING) {
+            let y = 0
+            let tm = control.millis() + 500
             CameraAI.recognize(CameraAI.Recognize.Ball)
-            go(15, 15)
+            Nezha.setTwoWheelSpeed(9, 8)
             do {
                 CameraAI.fetchCamera()
-            } while (CameraAI.itemPosY() > 200)
-            go(0, 0)
+                y = CameraAI.itemPosY()
+                if (y)
+                    tm = control.millis() + 500
+                else {
+                    if (tm < control.millis())
+                        break
+                }
+                basic.pause(1)
+            } while (y == 0 || y > 80)
+            basic.pause(1500)
+            Nezha.setTwoWheelSpeed(0, 0)
         }
     }
 
@@ -359,11 +247,14 @@ namespace CSoccerPlayer
     export function findBall() {
         if (PLAYING) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
-            go(15, -15)
+            Nezha.setTwoWheelSpeed(8, -8)
             do {
                 CameraAI.fetchCamera()
+                basic.pause(1)
             } while (!CameraAI.itemCount())
-            go(0 , 0)
+            Nezha.setTwoWheelSpeed(-8, 8)
+            basic.pause(100)
+            Nezha.setTwoWheelSpeed(0 , 0)
         }
     }
 
@@ -503,3 +394,22 @@ namespace CSoccerPlayer
         EventGoalAsset = programmableCode;
     }
 }
+
+PLAYING=true
+CSoccerPlayer.shoot()
+CameraAI.recognize(CameraAI.Recognize.Ball)
+basic.pause(2000)
+
+while (true) {
+    basic.showNumber(ColorSensor.read())
+}
+
+/*
+while (true) {
+    CSoccerPlayer.findBall()
+    CSoccerPlayer.approachBall()
+    CSoccerPlayer.possessBall()
+    CSoccerPlayer.findGoal()
+    CSoccerPlayer.attack()
+}
+*/
