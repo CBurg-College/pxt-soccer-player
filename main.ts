@@ -38,61 +38,46 @@ input.onButtonPressed(Button.B, function () {
     showPlayerColor()
 })
 
-let EventGoalAsset: handler
-let EventGoalAgainst: handler
-let EventObstruction: handler
-let EventWinner: handler
-let EventLoser: handler
+let GOALASSET = false
+let GOALAGAINST = false
+let WINNER = false
+let LOSER = false
+
+let EventWistle: handler
 
 setMatchHandling(() => {
     switch (MATCH) {
         case Match.PointA:
             setPause()
-            if (PLAYER == Player.Green) {
-                if (EventGoalAsset) EventGoalAsset()
-                display()
-            }
-            else {
-                if (EventGoalAgainst) EventGoalAgainst()
-                display()
-            }
+            if (PLAYER == Player.Green) GOALASSET = true
+            else GOALAGAINST = true
+            if (EventWistle) EventWistle()
+            display()
+            GOALASSET = GOALAGAINST = false
             break;
         case Match.PointB:
             setPause()
-            if (PLAYER == Player.Blue) {
-                if (EventGoalAsset) EventGoalAsset()
-                display()
-            }
-            else {
-                if (EventGoalAgainst) EventGoalAgainst()
-                display()
-            }
+            if (PLAYER == Player.Blue) GOALASSET = true
+            else GOALAGAINST = true
+            if (EventWistle) EventWistle()
+            display()
+            GOALASSET = GOALAGAINST = false
             break;
         case Match.WinnerA:
         case Match.DisqualB:
-            if (PLAYER == Player.Green) {
-                if (EventWinner) EventWinner()
-                OBSTRUCTIONS = 0
-                showPlayerColor()
-            }
-            else {
-                if (EventLoser) EventLoser()
-                OBSTRUCTIONS = 0
-                showPlayerColor()
-            }
+            if (PLAYER == Player.Green) WINNER = true
+            else LOSER = true
+            if (EventWistle) EventWistle()
+            OBSTRUCTIONS = 0
+            display()
             break;
         case Match.WinnerB:
         case Match.DisqualA:
-            if (PLAYER == Player.Blue) {
-                if (EventWinner) EventWinner()
-                OBSTRUCTIONS = 0
-                showPlayerColor()
-            }
-            else {
-                if (EventLoser) EventLoser()
-                OBSTRUCTIONS = 0
-                showPlayerColor()
-            }
+            if (PLAYER == Player.Blue) WINNER = true
+            else LOSER = true
+            if (EventWistle) EventWistle()
+            OBSTRUCTIONS = 0
+            display()
             break;
     }
 })
@@ -123,22 +108,6 @@ namespace CSoccerPlayer {
         return false
     }
 
-    export enum Direction {
-        //% block="forward"
-        //% block.loc.nl="vooruit"
-        Forward,
-        //% block="reverse"
-        //% block.loc.nl="achteruit"
-        Reverse
-    }
-
-    //% color="#FFCC00"
-    //% block="code for playing"
-    //% block.loc.nl="code om te voetballen"
-    export function onPlay(programmableCode: () => void): void {
-        playHandler = programmableCode;
-    }
-
     basic.forever(function () {
         if (inactive()) return
         if (TMPOSSESS != 0 && control.millis() > TMPOSSESS)
@@ -155,22 +124,18 @@ namespace CSoccerPlayer {
         }
     })
 
-    //% subcategory="Bal-controle"
-    //% block="shoot the ball"
-    //% block.loc.nl="schiet de bal"
-    export function shoot() {
-        if (inactive()) return
-        Nezha.servoAngle(Servo.S1, 65)
-        TMPOSSESS = 0
+    //% color="#FFCC00"
+    //% block="when the arbiter wistles"
+    //% block.loc.nl="als de scheidsrechter fluit"
+    export function onEventWistle(programmableCode: () => void): void {
+        EventWistle = programmableCode;
     }
 
-    //% subcategory="Bal-controle"
-    //% block="take the ball in possession"
-    //% block.loc.nl="neem balbezit"
-    export function possessBall() {
-        if (inactive()) return
-        Nezha.servoAngle(Servo.S1, 120)
-        TMPOSSESS = control.millis() + 5000
+    //% color="#FFCC00"
+    //% block="code for playing"
+    //% block.loc.nl="code om te voetballen"
+    export function onPlay(programmableCode: () => void): void {
+        playHandler = programmableCode;
     }
 
     //% subcategory="Bewegen"
@@ -262,6 +227,52 @@ namespace CSoccerPlayer {
         Nezha.setTwoWheelSpeed(-8, 8)
         basic.pause(100)
         Nezha.setTwoWheelSpeed(0, 0)
+    }
+
+    //% subcategory="Bal-controle"
+    //% block="shoot the ball"
+    //% block.loc.nl="schiet de bal"
+    export function shoot() {
+        if (inactive()) return
+        Nezha.servoAngle(Servo.S1, 65)
+        TMPOSSESS = 0
+    }
+
+    //% subcategory="Bal-controle"
+    //% block="take the ball in possession"
+    //% block.loc.nl="neem balbezit"
+    export function possessBall() {
+        if (inactive()) return
+        Nezha.servoAngle(Servo.S1, 120)
+        TMPOSSESS = control.millis() + 5000
+    }
+
+    //% subcategory="Na fluitsignaal"
+    //% block="goal asset"
+    //% block.loc.nl="doepunt voor"
+    export function goalAsset(): boolean {
+        return GOALASSET
+    }
+
+    //% subcategory="Na fluitsignaal"
+    //% block="goal against"
+    //% block.loc.nl="doepunt tegen"
+    export function goalAgainst(): boolean {
+        return GOALAGAINST
+    }
+
+    //% subcategory="Na fluitsignaal"
+    //% block="you won"
+    //% block.loc.nl="je hebt gewonnen"
+    export function winner(): boolean {
+        return WINNER
+    }
+
+    //% subcategory="Na fluitsignaal"
+    //% block="you lost"
+    //% block.loc.nl="je hebt verloren"
+    export function loser(): boolean {
+        return LOSER
     }
 
     //% subcategory="Kleuren"
@@ -358,45 +369,5 @@ namespace CSoccerPlayer {
     //% num.min=1 num.max=8
     export function setLed(num: number, color: Color) {
         LedRing.setPixelRGB(num - 1, rgb(color))
-    }
-
-    //% subcategory="Show"
-    //% color="#FFCC00"
-    //% block="after an obstruction"
-    //% block.loc.nl="na een obstructie"
-    export function onEventObstruction(programmableCode: () => void): void {
-        EventObstruction = programmableCode;
-    }
-
-    //% subcategory="Show"
-    //% color="#FFCC00"
-    //% block="when the loser"
-    //% block.loc.nl="als er verloren is"
-    export function onEventLoser(programmableCode: () => void): void {
-        EventLoser = programmableCode;
-    }
-
-    //% subcategory="Show"
-    //% color="#FFCC00"
-    //% block="when the winner"
-    //% block.loc.nl="als er gewonnen is"
-    export function onEventWinner(programmableCode: () => void): void {
-        EventWinner = programmableCode;
-    }
-
-    //% subcategory="Show"
-    //% color="#FFCC00"
-    //% block="when a goal against"
-    //% block.loc.nl="bij een doelpunt tegen"
-    export function onEventGoalAgainst(programmableCode: () => void): void {
-        EventGoalAgainst = programmableCode;
-    }
-
-    //% subcategory="Show"
-    //% color="#FFCC00"
-    //% block="when an asset goal"
-    //% block.loc.nl="bij een doelpunt voor"
-    export function onEventGoalAsset(programmableCode: () => void): void {
-        EventGoalAsset = programmableCode;
     }
 }
