@@ -280,14 +280,22 @@ namespace CSoccerPlayer {
     //% block="tornado"
     //% block.loc.nl="tornado"
     export function tornado() {
+        let on = true
         for (let speed = 10; speed < 50; speed += 5) {
+            if (on) { LedRing.setClear(); LedRing.showBuffer(); }
+            else showPlayerColor()
+            on = !on
             Nezha.setTwoWheelSpeed(speed, -speed)
             basic.pause(200)
         }
         for (let speed = 50; speed >= 0; speed -= 5) {
+            if (on) { LedRing.setClear(); LedRing.showBuffer(); }
+            else showPlayerColor()
+            on = !on
             Nezha.setTwoWheelSpeed(speed, -speed)
             basic.pause(200)
         }
+        showPlayerColor()
     }
 
     //% subcategory="Show"
@@ -300,10 +308,12 @@ namespace CSoccerPlayer {
             Nezha.setTwoWheelSpeed(30, 30)
             basic.pause(200)
             LedRing.setClear()
+            LedRing.showBuffer()
             Nezha.setTwoWheelSpeed(-30, -30)
             basic.pause(230)
         }
         Nezha.setTwoWheelSpeed(0, 0)
+        showPlayerColor()
     }
 
     //% subcategory="Show"
@@ -402,5 +412,3 @@ namespace CSoccerPlayer {
         LedRing.setPixelColor(num - 1, color)
     }
 }
-
-CSoccerPlayer.shake()
