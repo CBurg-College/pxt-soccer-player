@@ -26,24 +26,23 @@ function showPlayerColor() {
 }
 
 input.onButtonPressed(Button.A, function () {
+    Nezha.setTwoWheelSpeed(0,0)
+    clearPause()
+})
+
+input.onButtonPressed(Button.B, function () {
     PLAYER = Player.Green
     if (ColorSensor.read() == Color.Blue)
         PLAYER = Player.Blue
     showPlayerColor()
 })
 
-input.onButtonPressed(Button.B, function () {
-    PLAYING = false
-    Nezha.setTwoWheelSpeed(0,0)
-})
-
-type eventHandler = () => void
-let EventOutsideField: eventHandler
-let EventGoalAsset: eventHandler
-let EventGoalAgainst: eventHandler
-let EventObstruction: eventHandler
-let EventWinner: eventHandler
-let EventLoser: eventHandler
+let EventOutsideField: handler
+let EventGoalAsset: handler
+let EventGoalAgainst: handler
+let EventObstruction: handler
+let EventWinner: handler
+let EventLoser: handler
 
 setMatchHandling(() => {
     switch (MATCH) {
@@ -131,6 +130,13 @@ namespace CSoccerPlayer
     }
 
     //% color="#FFCC00"
+    //% block="when playing"
+    //% block.loc.nl="wanneer in het spel"
+    export function onPlayer(programmableCode: () => void): void {
+        playerHandler = programmableCode;
+    }
+
+    //% color="#FFCC00"
     //% block="when outside the field"
     //% block.loc.nl="wanneer buiten het speelveld"
     export function onEventOutsideField(programmableCode: () => void): void {
@@ -142,12 +148,16 @@ namespace CSoccerPlayer
             shoot()
         if (PLAYING) {
             let color = ColorSensor.read()
-            if (color != Color.White && color != Color.Green) {
+            if (color == Color.Black) {
                 if (TMPOSSESS) {
                     shoot()
                     TMPOSSESS = 0
                 }
                 if (EventOutsideField) EventOutsideField()
+            }
+            if (color == Color.Yellow) {
+                setPause()
+                Nezha.setTwoWheelSpeed(0, 0)
             }
         }
     })
@@ -162,7 +172,7 @@ namespace CSoccerPlayer
     //% block="shoot the ball"
     //% block.loc.nl="schiet de bal"
     export function shoot() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             Nezha.servoAngle(Servo.S1, 65)
             TMPOSSESS = 0
         }
@@ -172,7 +182,7 @@ namespace CSoccerPlayer
     //% block="take the ball in possession"
     //% block.loc.nl="neem balbezit"
     export function possessBall() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             Nezha.servoAngle(Servo.S1, 120)
             TMPOSSESS = control.millis() + 5000
         }
@@ -183,7 +193,7 @@ namespace CSoccerPlayer
     //% block.loc.nl="val aan"
     export function attack() {
         TMPOSSESS = control.millis() + 1000
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             Nezha.setTwoWheelSpeed(16, 16)
             while (TMPOSSESS) { basic.pause(1) }
             Nezha.setTwoWheelSpeed(0, 0)
@@ -194,7 +204,7 @@ namespace CSoccerPlayer
     //% block="turn to the goal"
     //% block.loc.nl="draai richting het doel"
     export function findGoal() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             CameraAI.recognize(CameraAI.Recognize.Color)
             Nezha.setTwoWheelSpeed(8,-8)
             do {
@@ -209,7 +219,7 @@ namespace CSoccerPlayer
     //% block="turn to the start direction"
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             Nezha.setTwoWheelSpeed(15, -15)
             while (!isHeading()) { basic.pause(1) }
             Nezha.setTwoWheelSpeed(0, 0)
@@ -220,7 +230,7 @@ namespace CSoccerPlayer
     //% block="run to the ball"
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             let y = 0
             let tm = control.millis() + 500
             CameraAI.recognize(CameraAI.Recognize.Ball)
@@ -245,7 +255,7 @@ namespace CSoccerPlayer
     //% block="turn to the ball"
     //% block.loc.nl="draai richting de bal"
     export function findBall() {
-        if (PLAYING) {
+        if (PLAYING && !PAUSE) {
             CameraAI.recognize(CameraAI.Recognize.Ball)
             Nezha.setTwoWheelSpeed(8, -8)
             do {
