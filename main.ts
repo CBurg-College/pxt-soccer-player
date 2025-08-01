@@ -21,9 +21,9 @@ let OBSTRUCTIONS = 0
 
 function showPlayerColor() {
     if (PLAYER == Player.Green)
-        LedRing.setRingRGB(rgb(Color.Green))
+        LedRing.setColor(Color.Green)
     else
-        LedRing.setRingRGB(rgb(Color.Blue))
+        LedRing.setColor(Color.Blue)
 }
 
 input.onButtonPressed(Button.A, function () {
@@ -248,17 +248,10 @@ namespace CSoccerPlayer {
     }
 
     //% subcategory="Na fluitsignaal"
-    //% block="goal asset"
-    //% block.loc.nl="doepunt voor"
-    export function goalAsset(): boolean {
-        return GOALASSET
-    }
-
-    //% subcategory="Na fluitsignaal"
-    //% block="goal against"
-    //% block.loc.nl="doepunt tegen"
-    export function goalAgainst(): boolean {
-        return GOALAGAINST
+    //% block="you lost"
+    //% block.loc.nl="je hebt verloren"
+    export function loser(): boolean {
+        return LOSER
     }
 
     //% subcategory="Na fluitsignaal"
@@ -269,13 +262,51 @@ namespace CSoccerPlayer {
     }
 
     //% subcategory="Na fluitsignaal"
-    //% block="you lost"
-    //% block.loc.nl="je hebt verloren"
-    export function loser(): boolean {
-        return LOSER
+    //% block="the opponent scored"
+    //% block.loc.nl="de tegenpartij scoorde"
+    export function goalAgainst(): boolean {
+        return GOALAGAINST
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Na fluitsignaal"
+    //% block="you scored"
+    //% block.loc.nl="je hebt gescoord"
+    export function goalAsset(): boolean {
+        return GOALASSET
+    }
+
+    //% subcategory="Show"
+    //% color="#FFCC44"
+    //% block="tornado"
+    //% block.loc.nl="tornado"
+    export function tornado() {
+        for (let speed = 10; speed < 50; speed += 5) {
+            Nezha.setTwoWheelSpeed(speed, -speed)
+            basic.pause(200)
+        }
+        for (let speed = 50; speed >= 0; speed -= 5) {
+            Nezha.setTwoWheelSpeed(speed, -speed)
+            basic.pause(200)
+        }
+    }
+
+    //% subcategory="Show"
+    //% color="#FFCC44"
+    //% block="shake"
+    //% block.loc.nl="schudden"
+    export function shake() {
+        for (let i = 0; i < 6; i++) {
+            showPlayerColor()
+            Nezha.setTwoWheelSpeed(30, 30)
+            basic.pause(200)
+            LedRing.setClear()
+            Nezha.setTwoWheelSpeed(-30, -30)
+            basic.pause(230)
+        }
+        Nezha.setTwoWheelSpeed(0, 0)
+    }
+
+    //% subcategory="Show"
     //% color="#FFCC44"
     //% block="rotate at %pace pace"
     //% block.loc.nl="draai in %pace tempo"
@@ -283,7 +314,7 @@ namespace CSoccerPlayer {
         LedRing.setPace(pace)
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% color="#FFCC44"
     //% block="rotate a snake %rot with color %color"
     //% block.loc.nl="draai een slang %rot met kleur %color"
@@ -292,7 +323,7 @@ namespace CSoccerPlayer {
         LedRing.snake(color, rot)
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% color="#FFCC44"
     //% block="rotate rainbow %rot"
     //% block.loc.nl="draai de regenboog %rot"
@@ -300,16 +331,16 @@ namespace CSoccerPlayer {
         LedRing.rainbow(rot)
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% color="#FFCC44"
     //% block="show color %color"
     //% block.loc.nl="toon de kleur %color"
     //% color.defl=Color.White
     export function showColor(color: Color) {
-        LedRing.setRingRGB(rgb(color))
+        LedRing.setColor(color)
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% color="#FFCC44"
     //% block="show player color"
     //% block.loc.nl="toon de spelerkleur"
@@ -317,7 +348,7 @@ namespace CSoccerPlayer {
         showPlayerColor()
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% group="Leds apart"
     //% color="#FFCC44"
     //% block="turn all leds off"
@@ -326,7 +357,7 @@ namespace CSoccerPlayer {
         LedRing.setClear()
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% group="Leds apart"
     //% color="#FFCC44"
     //% block="turn selected leds on"
@@ -335,7 +366,7 @@ namespace CSoccerPlayer {
         LedRing.showBuffer()
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% group="Leds apart"
     //% color="#FFCC44"
     //% block="rotate a full circle %rot at %pace pace"
@@ -350,7 +381,7 @@ namespace CSoccerPlayer {
         }
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% group="Leds apart"
     //% color="#FFCC44"
     //% block="rotate one position %rot"
@@ -360,7 +391,7 @@ namespace CSoccerPlayer {
         LedRing.showBuffer()
     }
 
-    //% subcategory="Kleuren"
+    //% subcategory="Show"
     //% group="Leds apart"
     //% color="#FFCC44"
     //% block="set led %num to color %color"
@@ -368,6 +399,8 @@ namespace CSoccerPlayer {
     //% color.defl=Color.White
     //% num.min=1 num.max=8
     export function setLed(num: number, color: Color) {
-        LedRing.setPixelRGB(num - 1, rgb(color))
+        LedRing.setPixelColor(num - 1, color)
     }
 }
+
+CSoccerPlayer.shake()
