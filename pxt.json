@@ -8,7 +8,8 @@
         "pxt-colorsensor": "github:cburg-college/pxt-colorsensor#981e9feac4eb8bd8cc2d8809c738ece931dead30",
         "pxt-ledring": "github:cburg-college/pxt-ledring#8e35e3c6beec2cd63d388051f011c38e8f3ce428",
         "pxt-nezhabrick": "github:cburg-college/pxt-nezhabrick#99c927839b6ff5649e34af9b39e2c52fda3c682f",
-        "pxt-aicamera": "github:cburg-college/pxt-aicamera#2998fd2193c6d04ce9ab8c32e662367a38342a1c"
+        "pxt-aicamera": "github:cburg-college/pxt-aicamera#8317ef73a352be0edbb6c96f2979ca1e2fc89341",
+        "pxt-match": "github:CBurg-College/pxt-match#c86b80f6b950ff2526eff647bb236b4cf1678356"
     },
     "files": [
         "main.blocks",

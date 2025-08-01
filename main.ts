@@ -3,6 +3,8 @@ ColorSensor.init()
 LedRing.init()
 Nezha.setLeftMotor(Motor.M2, false)
 Nezha.setRightMotor(Motor.M3, true)
+Nezha.servoAngle(Servo.S1, 65)
+basic.pause(2000)
 
 enum Player {
     //% block="green"
@@ -25,7 +27,7 @@ function showPlayerColor() {
 }
 
 input.onButtonPressed(Button.A, function () {
-    Nezha.setTwoWheelSpeed(0,0)
+    Nezha.setTwoWheelSpeed(0, 0)
     clearPause()
 })
 
@@ -36,7 +38,6 @@ input.onButtonPressed(Button.B, function () {
     showPlayerColor()
 })
 
-let EventOutsideField: handler
 let EventGoalAsset: handler
 let EventGoalAgainst: handler
 let EventObstruction: handler
@@ -46,33 +47,37 @@ let EventLoser: handler
 setMatchHandling(() => {
     switch (MATCH) {
         case Match.PointA:
+            setPause()
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
-                showPlayerColor()
+                display()
             }
             else {
                 if (EventGoalAgainst) EventGoalAgainst()
-                showPlayerColor()
+                display()
             }
             break;
         case Match.PointB:
+            setPause()
             if (PLAYER == Player.Blue) {
                 if (EventGoalAsset) EventGoalAsset()
-                showPlayerColor()
+                display()
             }
             else {
                 if (EventGoalAgainst) EventGoalAgainst()
-                showPlayerColor()
+                display()
             }
             break;
         case Match.WinnerA:
         case Match.DisqualB:
             if (PLAYER == Player.Green) {
                 if (EventWinner) EventWinner()
+                OBSTRUCTIONS = 0
                 showPlayerColor()
             }
             else {
                 if (EventLoser) EventLoser()
+                OBSTRUCTIONS = 0
                 showPlayerColor()
             }
             break;
@@ -80,33 +85,36 @@ setMatchHandling(() => {
         case Match.DisqualA:
             if (PLAYER == Player.Blue) {
                 if (EventWinner) EventWinner()
+                OBSTRUCTIONS = 0
                 showPlayerColor()
             }
             else {
                 if (EventLoser) EventLoser()
+                OBSTRUCTIONS = 0
                 showPlayerColor()
             }
             break;
     }
 })
 
+function onStop(programmableCode: () => void): void {
+    stopHandler = programmableCode;
+}
+onStop(() => { CSoccerPlayer.stop(); CSoccerPlayer.shoot(); })
+
 function display() {
     basic.showNumber(OBSTRUCTIONS)
     showPlayerColor()
 }
-
-displayAfterLogo(() => {
-    display()
-})
+displayAfterLogo(() => { display() })
 
 //% color="#00CC00" icon="\uf1f9"
 //% block="Soccer"
 //% block.loc.nl="Voetbal"
-namespace CSoccerPlayer
-{
+namespace CSoccerPlayer {
     let TMPOSSESS = 0
 
-    function isHeading() : boolean {
+    function isHeading(): boolean {
         let heading = input.compassHeading()
         if ((HEADING >= 354 || HEADING <= 5) && (heading >= 355 || heading <= 5))
             return true
@@ -125,142 +133,135 @@ namespace CSoccerPlayer
     }
 
     //% color="#FFCC00"
-    //% block="when playing"
-    //% block.loc.nl="wanneer in het spel"
-    export function onPlaying(programmableCode: () => void): void {
-        playerHandler = programmableCode;
-    }
-
-    //% color="#FFCC00"
-    //% block="when outside the field"
-    //% block.loc.nl="wanneer buiten het speelveld"
-    export function onEventOutsideField(programmableCode: () => void): void {
-        EventOutsideField = programmableCode;
+    //% block="code for playing"
+    //% block.loc.nl="code om te voetballen"
+    export function onPlay(programmableCode: () => void): void {
+        playHandler = programmableCode;
     }
 
     basic.forever(function () {
+        if (inactive()) return
         if (TMPOSSESS != 0 && control.millis() > TMPOSSESS)
             shoot()
-        if (PLAYING) {
-            let color = ColorSensor.read()
-            if (color == Color.Black) {
-                if (TMPOSSESS) {
-                    shoot()
-                    TMPOSSESS = 0
-                }
-                if (EventOutsideField) EventOutsideField()
-            }
-            if (color == Color.Yellow) {
-                setPause()
-                Nezha.setTwoWheelSpeed(0, 0)
-            }
+        if (ColorSensor.read() == Color.Black) {
+            setPause()
+            while (isRestarting()) basic.pause(1)
+            TMPOSSESS = 0
+            Nezha.servoAngle(Servo.S1, 65)
+            Nezha.setTwoWheelSpeed(-8, -8)
+            basic.pause(1000)
+            Nezha.setTwoWheelSpeed(0, 0)
+            clearPause()
         }
     })
-
-    //% block="game started"
-    //% block.loc.nl="spel is gestart"
-    export function isPlaying() {
-        return PLAYING
-    }
 
     //% subcategory="Bal-controle"
     //% block="shoot the ball"
     //% block.loc.nl="schiet de bal"
     export function shoot() {
-        if (PLAYING && !PAUSE) {
-            Nezha.servoAngle(Servo.S1, 65)
-            TMPOSSESS = 0
-        }
+        if (inactive()) return
+        Nezha.servoAngle(Servo.S1, 65)
+        TMPOSSESS = 0
     }
 
     //% subcategory="Bal-controle"
     //% block="take the ball in possession"
     //% block.loc.nl="neem balbezit"
     export function possessBall() {
-        if (PLAYING && !PAUSE) {
-            Nezha.servoAngle(Servo.S1, 120)
-            TMPOSSESS = control.millis() + 5000
-        }
+        if (inactive()) return
+        Nezha.servoAngle(Servo.S1, 120)
+        TMPOSSESS = control.millis() + 5000
+    }
+
+    //% subcategory="Bewegen"
+    //% block="stop"
+    //% block.loc.nl="stop"
+    export function stop() {
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Bewegen"
     //% block="attack"
     //% block.loc.nl="val aan"
     export function attack() {
+        if (inactive()) return
         TMPOSSESS = control.millis() + 1000
-        if (PLAYING && !PAUSE) {
-            Nezha.setTwoWheelSpeed(16, 16)
-            while (TMPOSSESS) { basic.pause(1) }
-            Nezha.setTwoWheelSpeed(0, 0)
+        Nezha.setTwoWheelSpeed(16, 16)
+        while (TMPOSSESS) {
+            if (inactive()) return
+            basic.pause(1)
         }
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Bewegen"
     //% block="turn to the goal"
     //% block.loc.nl="draai richting het doel"
     export function findGoal() {
-        if (PLAYING && !PAUSE) {
-            CameraAI.recognize(CameraAI.Recognize.Color)
-            Nezha.setTwoWheelSpeed(8,-8)
-            do {
-                CameraAI.fetchCamera()
-                basic.pause(1)
-            } while (!CameraAI.itemIsColor(Color.Green))
-            Nezha.setTwoWheelSpeed(0, 0)
-        }
+        if (inactive()) return
+        CameraAI.recognize(CameraAI.Recognize.Color)
+        Nezha.setTwoWheelSpeed(8, -8)
+        do {
+            if (inactive()) return
+            CameraAI.fetchCamera()
+            basic.pause(1)
+        } while (!CameraAI.itemIsColor(Color.Green))
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Bewegen"
     //% block="turn to the start direction"
     //% block.loc.nl="draai in de startrichting"
     export function turnToOpponent() {
-        if (PLAYING && !PAUSE) {
-            Nezha.setTwoWheelSpeed(15, -15)
-            while (!isHeading()) { basic.pause(1) }
-            Nezha.setTwoWheelSpeed(0, 0)
+        if (inactive()) return
+        Nezha.setTwoWheelSpeed(15, -15)
+        while (!isHeading()) {
+            if (inactive()) return
+            basic.pause(1)
         }
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Bewegen"
     //% block="run to the ball"
     //% block.loc.nl="rijd naar de bal"
     export function approachBall() {
-        if (PLAYING && !PAUSE) {
-            let y = 0
-            let tm = control.millis() + 500
-            CameraAI.recognize(CameraAI.Recognize.Ball)
-            Nezha.setTwoWheelSpeed(9, 8)
-            do {
-                CameraAI.fetchCamera()
-                y = CameraAI.itemPosY()
-                if (y)
-                    tm = control.millis() + 500
-                else {
-                    if (tm < control.millis())
-                        break
-                }
-                basic.pause(1)
-            } while (y == 0 || y > 80)
-            basic.pause(1500)
-            Nezha.setTwoWheelSpeed(0, 0)
-        }
+        if (inactive()) return
+        let y = 0
+        let tm = control.millis() + 500
+        CameraAI.recognize(CameraAI.Recognize.Ball)
+        Nezha.setTwoWheelSpeed(9, 8)
+        do {
+            if (inactive()) return
+            CameraAI.fetchCamera()
+            y = CameraAI.itemPosY()
+            if (y)
+                tm = control.millis() + 500
+            else {
+                if (tm < control.millis())
+                    break
+            }
+            basic.pause(1)
+        } while (y == 0 || y > 80)
+        basic.pause(1500)
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Bewegen"
     //% block="turn to the ball"
     //% block.loc.nl="draai richting de bal"
     export function findBall() {
-        if (PLAYING && !PAUSE) {
-            CameraAI.recognize(CameraAI.Recognize.Ball)
-            Nezha.setTwoWheelSpeed(8, -8)
-            do {
-                CameraAI.fetchCamera()
-                basic.pause(1)
-            } while (!CameraAI.itemCount())
-            Nezha.setTwoWheelSpeed(-8, 8)
-            basic.pause(100)
-            Nezha.setTwoWheelSpeed(0 , 0)
-        }
+        if (inactive()) return
+        CameraAI.recognize(CameraAI.Recognize.Ball)
+        Nezha.setTwoWheelSpeed(8, -8)
+        do {
+            if (inactive()) return
+            CameraAI.fetchCamera()
+            basic.pause(1)
+        } while (!CameraAI.itemCount())
+        Nezha.setTwoWheelSpeed(-8, 8)
+        basic.pause(100)
+        Nezha.setTwoWheelSpeed(0, 0)
     }
 
     //% subcategory="Kleuren"
@@ -399,16 +400,3 @@ namespace CSoccerPlayer
         EventGoalAsset = programmableCode;
     }
 }
-
-PLAYING=true
-CSoccerPlayer.shoot()
-CameraAI.recognize(CameraAI.Recognize.Ball)
-basic.pause(2000)
-
-CSoccerPlayer.onPlaying( () => {
-    CSoccerPlayer.findBall()
-    CSoccerPlayer.approachBall()
-    CSoccerPlayer.possessBall()
-    CSoccerPlayer.findGoal()
-    CSoccerPlayer.attack()
-})
