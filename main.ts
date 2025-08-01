@@ -14,7 +14,6 @@ enum Player {
 }
 
 let PLAYER = Player.Green
-let PLAYING = false
 let HEADING = input.compassHeading()
 let OBSTRUCTIONS = 0
 
@@ -46,9 +45,6 @@ let EventLoser: handler
 
 setMatchHandling(() => {
     switch (MATCH) {
-        case Match.Start:
-            PLAYING = true
-            break;
         case Match.PointA:
             if (PLAYER == Player.Green) {
                 if (EventGoalAsset) EventGoalAsset()
@@ -92,7 +88,6 @@ setMatchHandling(() => {
             }
             break;
     }
-    PLAYING = (MATCH == Match.Start)
 })
 
 function display() {
@@ -132,7 +127,7 @@ namespace CSoccerPlayer
     //% color="#FFCC00"
     //% block="when playing"
     //% block.loc.nl="wanneer in het spel"
-    export function onPlayer(programmableCode: () => void): void {
+    export function onPlaying(programmableCode: () => void): void {
         playerHandler = programmableCode;
     }
 
@@ -410,16 +405,10 @@ CSoccerPlayer.shoot()
 CameraAI.recognize(CameraAI.Recognize.Ball)
 basic.pause(2000)
 
-while (true) {
-    basic.showNumber(ColorSensor.read())
-}
-
-/*
-while (true) {
+CSoccerPlayer.onPlaying( () => {
     CSoccerPlayer.findBall()
     CSoccerPlayer.approachBall()
     CSoccerPlayer.possessBall()
     CSoccerPlayer.findGoal()
     CSoccerPlayer.attack()
-}
-*/
+})

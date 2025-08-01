@@ -9,7 +9,7 @@
         "pxt-ledring": "github:cburg-college/pxt-ledring#8e35e3c6beec2cd63d388051f011c38e8f3ce428",
         "pxt-nezhabrick": "github:cburg-college/pxt-nezhabrick#99c927839b6ff5649e34af9b39e2c52fda3c682f",
         "pxt-aicamera": "github:cburg-college/pxt-aicamera#2998fd2193c6d04ce9ab8c32e662367a38342a1c",
-        "pxt-match": "github:CBurg-College/pxt-match#15eeb501da8cc931705a15c1c71582e4504c1f7c"
+        "pxt-match": "github:cburg-college/pxt-match#bc88402ef43331970083fe7996cfc98b6cba27dd"
     },
     "files": [
         "main.blocks",
